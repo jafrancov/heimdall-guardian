@@ -1,0 +1,44 @@
+rules:
+  - id: SWIFT-WEB-001
+    languages: [swift]
+    severity: ERROR
+    message: >-
+      Bridge between JavaScript and the application: the page loaded by the
+      WKWebView can send messages to native code through a
+      WKScriptMessageHandler. If the page belongs to a third party, is
+      loaded over http, or has foreign content injected into it, a malicious
+      script gains access to application functions.
+    metadata:
+      cwe: "CWE-749"
+      owasp: "A06:2025 Insecure Design"
+      severity_hdl: high
+      confidence: medium
+      title_es: "WKWebView con puente de JavaScript hacia la aplicación (Swift/iOS)"
+      title: "WKWebView with a JavaScript bridge to the application (Swift/iOS)"
+      recommendation_es: >-
+        Cargar solo páginas propias por https y, en el manejador, comprobar
+        message.frameInfo.securityOrigin antes de responder. Exponer el mínimo
+        de funciones, validar y tratar como no confiable cada mensaje que
+        llegue y no devolverle datos de sesión. Quitar el manejador
+        (removeScriptMessageHandler) cuando la vista deje de usarse.
+      recommendation: >-
+        Load only your own pages over https and, in the handler, check
+        message.frameInfo.securityOrigin before answering. Expose the minimum
+        of functions, validate and treat as untrusted every incoming message,
+        and do not return session data. Remove the handler
+        (removeScriptMessageHandler) when the view is no longer used.
+      message_es: >-
+        Puente entre JavaScript y la aplicación: la página que carga el WKWebView
+        puede enviar mensajes al código nativo mediante un WKScriptMessageHandler.
+        Si la página es de terceros, se carga por http o se le inyecta contenido
+        ajeno, un script malicioso obtiene acceso a funciones de la aplicación.
+    patterns:
+      - pattern-either:
+          - pattern: |
+              $C.add($H, name: $N)
+          - pattern: |
+              $C.add($H, contentWorld: $W, name: $N)
+          - pattern: $C.addScriptMessageHandler(...)
+      - metavariable-regex:
+          metavariable: $C
+          regex: (?i)^.*(contentcontroller|usercontroller|ucc|controller)$

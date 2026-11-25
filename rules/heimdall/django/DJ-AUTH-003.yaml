@@ -1,0 +1,33 @@
+rules:
+  - id: DJ-AUTH-003
+    languages: [python]
+    severity: ERROR
+    message: >-
+      Django REST Framework configured with AllowAny: the endpoint (or the whole
+      API, if it is the default) accepts requests without authentication.
+    metadata:
+      cwe: "CWE-306"
+      owasp: "A01:2025 Broken Access Control"
+      severity_hdl: high
+      confidence: medium
+      message_es: >-
+        Django REST Framework configurado con AllowAny: el endpoint (o toda la
+        API, si es el valor por defecto) acepta peticiones sin autenticación.
+      title: "API without authentication: AllowAny (DRF)"
+      recommendation: >-
+        Use IsAuthenticated or a specific permission. In settings, define
+        DEFAULT_PERMISSION_CLASSES with IsAuthenticated and open only the endpoints
+        that must be public.
+      title_es: "API sin autenticación: AllowAny (DRF)"
+      recommendation_es: >-
+        Usar IsAuthenticated o un permiso específico. En settings, definir
+        DEFAULT_PERMISSION_CLASSES con IsAuthenticated y abrir solo los
+        endpoints que deban ser públicos.
+    pattern-either:
+      - pattern: permission_classes = [..., AllowAny, ...]
+      - pattern: permission_classes = (..., AllowAny, ...)
+      - pattern: permission_classes = [..., $M.AllowAny, ...]
+      - pattern: permission_classes = (..., $M.AllowAny, ...)
+      - pattern: permission_classes([..., AllowAny, ...])
+      - pattern: permission_classes([..., $M.AllowAny, ...])
+      - pattern: '"rest_framework.permissions.AllowAny"'

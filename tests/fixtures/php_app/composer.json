@@ -1,0 +1,6 @@
+{
+  "name": "ejemplo/fixture-php",
+  "require": {
+    "php": ">=7.4"
+  }
+}

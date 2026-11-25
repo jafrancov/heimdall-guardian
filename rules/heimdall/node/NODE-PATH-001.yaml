@@ -1,0 +1,122 @@
+rules:
+  - id: NODE-PATH-001
+    languages: [javascript, typescript]
+    severity: ERROR
+    mode: taint
+    message: >-
+      Request data forms a file path (fs.readFile, createReadStream,
+      writeFile, unlink, res.sendFile, res.download...) without being
+      reduced to a file name: it allows reading, writing or deleting files
+      outside the intended folder (path traversal).
+    metadata:
+      cwe: "CWE-22"
+      owasp: "A01:2025 Broken Access Control"
+      severity_hdl: high
+      confidence: medium
+      title_es: "Acceso a archivos con ruta controlada por la petición (Node.js)"
+      title: "File access with a request-controlled path (Node.js)"
+      recommendation_es: >-
+        Reducir la entrada a un nombre con path.basename() o una lista blanca,
+        resolver contra una carpeta base fija con path.resolve y comprobar que
+        el resultado siga dentro de ella; en Express, res.sendFile(nombre, {
+        root: carpeta }).
+      recommendation: >-
+        Reduce the input to a file name with path.basename() or an allowlist,
+        resolve it against a fixed base folder with path.resolve and check
+        that the result is still inside it; in Express, use res.sendFile(name,
+        { root: folder }).
+      message_es: >-
+        Datos de la petición forman la ruta de un archivo (fs.readFile,
+        createReadStream, writeFile, unlink, res.sendFile, res.download…) sin
+        reducirla a un nombre de archivo: permite leer, escribir o borrar
+        archivos fuera de la carpeta prevista (path traversal).
+    pattern-sources:
+      - pattern: req.query
+      - pattern: req.body
+      - pattern: req.params
+      - pattern: req.headers
+      - pattern: req.cookies
+      - pattern: req.signedCookies
+      - pattern: req.get(...)
+      - pattern: req.header(...)
+      - pattern: request.query
+      - pattern: request.body
+      - pattern: request.params
+      - pattern: request.headers
+      - pattern: request.cookies
+      - pattern: ctx.query
+      - pattern: ctx.params
+      - pattern: ctx.request.body
+      - pattern: ctx.request.query
+      - patterns:
+          - pattern: |
+              class $C { $M(..., @$DEC(...) $X, ...) {...} }
+          - metavariable-regex:
+              metavariable: $DEC
+              regex: ^(Query|Body|Param|Headers|Cookies)$
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., ParseIntPipe, ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., new ParseIntPipe(...), ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., ParseFloatPipe, ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., new ParseFloatPipe(...), ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., ParseBoolPipe, ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., new ParseBoolPipe(...), ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., ParseUUIDPipe, ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., new ParseUUIDPipe(...), ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., ParseEnumPipe(...), ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., new ParseEnumPipe(...), ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., ParseDatePipe, ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., new ParseDatePipe(...), ...) $X, ...) {...} }
+          - focus-metavariable: $X
+    pattern-sanitizers:
+      - pattern: path.basename(...)
+      - pattern: basename(...)
+      - pattern: sanitize(...)
+      - pattern: sanitizeFilename(...)
+      - pattern: sanitize_filename(...)
+      - pattern: $S.sanitize(...)
+      - pattern: slugify(...)
+      - patterns:
+          - pattern: $X[...]
+          - metavariable-regex:
+              metavariable: $X
+              regex: ^(?!(req|request|ctx)\b)
+      - pattern: parseInt(...)
+      - pattern: parseFloat(...)
+      - pattern: Number(...)
+      - pattern: Number.parseInt(...)
+      - pattern: Math.floor(...)
+    pattern-sinks:
+      - patterns:
+          - pattern: $FS.$M($P, ...)
+          - metavariable-regex:
+              metavariable: $FS
+              regex: ^(fs|fsp|fsPromises|fse|fsExtra|promises|fs\.promises|fsp\.promises|fs-extra)$
+          - metavariable-regex:
+              metavariable: $M
+              regex: ^(readFile|readFileSync|createReadStream|createWriteStream|writeFile|writeFileSync|appendFile|appendFileSync|unlink|unlinkSync|rm|rmSync|rmdir|rmdirSync|readdir|readdirSync|rename|renameSync|copyFile|copyFileSync|remove|removeSync|outputFile|readJson|readJsonSync|writeJson|writeJsonSync|open|openSync|stat|statSync)$
+          - focus-metavariable: $P
+      - patterns:
+          - pattern: $RES.$M($P, ...)
+          - metavariable-regex:
+              metavariable: $RES
+              regex: ^(res|response|reply)$
+          - metavariable-regex:
+              metavariable: $M
+              regex: ^(sendFile|sendfile|download)$
+          - pattern-not: |
+              $RES.$M($P, {..., root: ..., ...}, ...)
+          - pattern-not: |
+              $RES.$M($P, $NAME, {..., root: ..., ...}, ...)
+          - focus-metavariable: $P

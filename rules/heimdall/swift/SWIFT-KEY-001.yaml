@@ -1,0 +1,37 @@
+rules:
+  - id: SWIFT-KEY-001
+    languages: [swift]
+    severity: WARNING
+    message: >-
+      Keychain item with weak accessibility: kSecAttrAccessibleAlways (and
+      its ThisDeviceOnly variant) leaves the data available even when the
+      device is locked and freshly booted, and Apple has deprecated it. An
+      attacker holding the device can read it without unlocking it.
+    metadata:
+      cwe: "CWE-311"
+      owasp: "A04:2025 Cryptographic Failures"
+      severity_hdl: medium
+      confidence: high
+      title_es: "Keychain con accesibilidad «siempre» (Swift/iOS)"
+      title: "Keychain item with «always» accessibility (Swift/iOS)"
+      recommendation_es: >-
+        Usar kSecAttrAccessibleWhenUnlockedThisDeviceOnly para datos que solo
+        se necesitan con la app en uso, o kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+        si una tarea en segundo plano debe leerlos. Para datos muy sensibles,
+        agregar un control de acceso con biometría (SecAccessControlCreateWithFlags).
+      recommendation: >-
+        Use kSecAttrAccessibleWhenUnlockedThisDeviceOnly for data needed only
+        while the app is in use, or
+        kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly if a background task
+        must read it. For highly sensitive data, add an access control with
+        biometrics (SecAccessControlCreateWithFlags).
+      message_es: >-
+        Elemento del Keychain con accesibilidad débil: kSecAttrAccessibleAlways
+        (y su variante ThisDeviceOnly) deja el dato disponible incluso con el
+        dispositivo bloqueado y recién encendido, y Apple lo declaró obsoleto. Un
+        atacante con el dispositivo en la mano puede leerlo sin desbloquearlo.
+    pattern-either:
+      - pattern: kSecAttrAccessibleAlways
+      - pattern: kSecAttrAccessibleAlwaysThisDeviceOnly
+      - pattern: $K.accessibility(.always)
+      - pattern: $K.accessibility(.alwaysThisDeviceOnly)

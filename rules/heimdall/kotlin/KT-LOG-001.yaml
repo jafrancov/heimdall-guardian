@@ -1,0 +1,42 @@
+rules:
+  - id: KT-LOG-001
+    languages: [regex]
+    severity: WARNING
+    message: >-
+      Logging of sensitive data: Log, Timber or println receives a variable
+      that looks like a token, password, PIN or card data. The Android log
+      can be read with adb logcat, is included in bug reports and, before
+      Android 4.1, could be read by other applications.
+    metadata:
+      cwe: "CWE-532"
+      owasp: "A09:2025 Security Logging and Alerting Failures"
+      severity_hdl: medium
+      confidence: medium
+      title_es: "Dato sensible escrito en el registro (Kotlin/Android)"
+      title: "Sensitive data written to the log (Kotlin/Android)"
+      recommendation_es: >-
+        No registrar tokens, contraseñas, PIN, números de tarjeta ni
+        encabezados Authorization. Si hace falta rastrear el valor, registrar
+        solo su longitud o los últimos cuatro caracteres. Plantar Timber con
+        un árbol de depuración solo en BuildConfig.DEBUG, y quitar las
+        llamadas a Log con reglas de R8/ProGuard (-assumenosideeffects) en la
+        versión publicada.
+      recommendation: >-
+        Do not log tokens, passwords, PINs, card numbers or Authorization
+        headers. If you need to trace the value, log only its length or the
+        last four characters. Plant Timber with a debug tree only under
+        BuildConfig.DEBUG, and strip Log calls with R8/ProGuard rules
+        (-assumenosideeffects) in the released version.
+      message_es: >-
+        Registro de datos sensibles: Log, Timber o println reciben una variable
+        que parece un token, contraseña, PIN o dato de tarjeta. El registro de
+        Android se lee con adb logcat, se incluye en reportes de error y, en
+        versiones anteriores a Android 4.1, lo leían otras aplicaciones.
+    paths:
+      include:
+        - "*.kt"
+    pattern-either:
+      - pattern-regex: >-
+          (?m)^(?![ \t]*//)[^\n]*?\bLog\.[divwe]\([^,\n]+,\s*(?:"(?:[^"\\\n]|\\.)*?\$\{?[\w.?!]*(?i:token|passw|pwd|contrase|secret|jwt|cvv|card_?num|creditcard|apikey|api_key|(?<![a-z])pin(?:_?code)?(?![a-z]))[\w]*+(?!\.(?:length|isEmpty|size|take))|"[^"\n]*"\s*\+\s*[\w.?!]*(?i:token|passw|pwd|contrase|secret|jwt|cvv|card_?num|creditcard|apikey|api_key|(?<![a-z])pin(?:_?code)?(?![a-z]))[\w]*+(?!\.(?:length|isEmpty|size|take))|[\w.?!]*(?i:token|passw|pwd|contrase|secret|jwt|cvv|card_?num|creditcard|apikey|api_key|(?<![a-z])pin(?:_?code)?(?![a-z]))[\w.?!]*+(?<!\.length)(?<!\.isEmpty\(\))(?<!\.size)\s*[,)])
+      - pattern-regex: >-
+          (?m)^(?![ \t]*//)[^\n]*?\b(?:Timber(?:\.\w+\([^)\n]*\))?\.[divwe]|println|print)\((?:"(?:[^"\\\n]|\\.)*?\$\{?[\w.?!]*(?i:token|passw|pwd|contrase|secret|jwt|cvv|card_?num|creditcard|apikey|api_key|(?<![a-z])pin(?:_?code)?(?![a-z]))[\w]*+(?!\.(?:length|isEmpty|size|take))|"[^"\n]*"\s*\+\s*[\w.?!]*(?i:token|passw|pwd|contrase|secret|jwt|cvv|card_?num|creditcard|apikey|api_key|(?<![a-z])pin(?:_?code)?(?![a-z]))[\w]*+(?!\.(?:length|isEmpty|size|take))|[\w.?!]*(?i:token|passw|pwd|contrase|secret|jwt|cvv|card_?num|creditcard|apikey|api_key|(?<![a-z])pin(?:_?code)?(?![a-z]))[\w.?!]*+(?<!\.length)(?<!\.isEmpty\(\))(?<!\.size)\s*[,)])

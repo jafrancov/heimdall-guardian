@@ -1,0 +1,49 @@
+rules:
+  - id: SWIFT-TLS-001
+    languages: [regex]
+    severity: ERROR
+    message: >-
+      Certificate validation disabled: the URLSession delegate accepts any
+      server certificate without evaluating it, or an evaluator that
+      validates nothing is used. Anyone on the network (a public Wi-Fi, for
+      example) can impersonate the server and read or modify the traffic.
+    metadata:
+      cwe: "CWE-295"
+      owasp: "A04:2025 Cryptographic Failures"
+      severity_hdl: high
+      confidence: high
+      title_es: "Validación de certificados TLS desactivada (Swift/iOS)"
+      title: "TLS certificate validation disabled (Swift/iOS)"
+      recommendation_es: >-
+        Eliminar el método didReceive challenge para que el sistema valide la
+        cadena, o evaluar serverTrust con SecTrustEvaluateWithError antes de
+        responder .useCredential. Si hace falta confiar en una CA propia o
+        fijar el certificado (pinning), comparar la llave pública o la huella
+        del certificado recibido con la esperada y cancelar el desafío si no
+        coincide. En Alamofire, usar PinnedCertificatesTrustEvaluator o
+        DefaultTrustEvaluator en lugar de DisabledTrustEvaluator.
+      recommendation: >-
+        Remove the didReceive challenge method so the system validates the
+        chain, or evaluate serverTrust with SecTrustEvaluateWithError before
+        answering .useCredential. If you need to trust your own CA or pin the
+        certificate, compare the public key or fingerprint of the received
+        certificate with the expected one and cancel the challenge if they do
+        not match. In Alamofire, use PinnedCertificatesTrustEvaluator or
+        DefaultTrustEvaluator instead of DisabledTrustEvaluator.
+      message_es: >-
+        Validación de certificados desactivada: el delegado de URLSession acepta
+        cualquier certificado del servidor sin evaluarlo, o se usa un evaluador
+        que no valida nada. Cualquiera en la red (una wifi pública, por ejemplo)
+        puede hacerse pasar por el servidor y leer o modificar el tráfico.
+    paths:
+      include:
+        - "*.swift"
+    pattern-either:
+      # El delegado responde .useCredential sin evaluar la cadena: ninguna
+      # llamada a SecTrust*, validación ni comparación de certificado antes.
+      - pattern-regex: >-
+          (?s)\bfunc\s+\w+\s*\([^{]*?\bdidReceive\b[^{]*\{(?:(?!SecTrust|\bfunc\b|(?-i:[Pp]in(?:ned|ning)?|[Vv]alidat|[Ee]valuat|[Cc]ertificate|[Pp]ublicKey)).)*?\K\b(?:completionHandler|completion|handler|callback)\(\s*\.useCredential,\s*URLCredential\(trust:[^\n]*
+      - pattern-regex: >-
+          (?m)^(?![ \t]*//)[^\n]*?\K\bDisabled(?:Trust)?Evaluator\(\)
+      - pattern-regex: >-
+          (?m)^(?![ \t]*//)[^\n]*?\K\.disableEvaluation\b

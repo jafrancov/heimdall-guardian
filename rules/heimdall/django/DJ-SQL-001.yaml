@@ -1,0 +1,33 @@
+rules:
+  - id: DJ-SQL-001
+    languages: [python]
+    severity: ERROR
+    message: >-
+      SQL query built with an f-string, % formatting or concatenation. If any
+      value comes from the user, it allows SQL injection.
+    metadata:
+      cwe: "CWE-89"
+      owasp: "A05:2025 Injection"
+      severity_hdl: high
+      confidence: medium
+      message_es: >-
+        Consulta SQL construida con f-string, formato % o concatenación. Si algún
+        valor proviene del usuario, permite inyección SQL.
+      title: "Dynamic SQL in a direct query (Django)"
+      recommendation: >-
+        Use parameterized queries: cursor.execute("... WHERE id = %s", [value]) or
+        the ORM. Never interpolate values into the query text.
+      title_es: "SQL dinámico en consulta directa (Django)"
+      recommendation_es: >-
+        Usar consultas parametrizadas: cursor.execute("... WHERE id = %s", [valor])
+        o el ORM. Nunca interpolar valores en el texto de la consulta.
+    patterns:
+      - pattern-either:
+          - pattern: $OBJ.$METHOD(f"...", ...)
+          - pattern: $OBJ.$METHOD("..." % ..., ...)
+          - pattern: $OBJ.$METHOD("...".format(...), ...)
+          - pattern: $OBJ.$METHOD("..." + ..., ...)
+          - pattern: $OBJ.$METHOD(... + "...", ...)
+      - metavariable-regex:
+          metavariable: $METHOD
+          regex: ^(execute|executemany|raw|extra)$

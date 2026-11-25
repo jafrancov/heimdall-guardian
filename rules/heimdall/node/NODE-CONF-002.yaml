@@ -1,0 +1,61 @@
+rules:
+  - id: NODE-CONF-002
+    languages: [javascript, typescript]
+    severity: WARNING
+    message: >-
+      Insecure session or cookie: a cookie without httpOnly or secure, or a
+      session secret written in the code. An injected script can read the
+      cookie, it travels over unencrypted connections, and anyone who can
+      read the repository can forge sessions.
+    metadata:
+      cwe: "CWE-1004"
+      owasp: "A02:2025 Security Misconfiguration"
+      severity_hdl: medium
+      confidence: high
+      title_es: "Cookie de sesión insegura o secreto de sesión en el código (Node.js)"
+      title: "Insecure session cookie or hard-coded session secret (Node.js)"
+      recommendation_es: >-
+        Configurar httpOnly: true, secure: true (detrás de HTTPS, con trust
+        proxy si aplica) y sameSite: 'lax' o 'strict'. Leer el secreto de sesión
+        de una variable de entorno (process.env.SESSION_SECRET).
+      recommendation: >-
+        Set httpOnly: true, secure: true (behind HTTPS, with trust proxy if
+        applicable) and sameSite: 'lax' or 'strict'. Read the session secret
+        from an environment variable (process.env.SESSION_SECRET).
+      message_es: >-
+        Sesión o cookie insegura: cookie sin httpOnly o sin secure, o secreto de
+        sesión escrito en el código. Un script inyectado puede leer la cookie,
+        viaja por conexiones sin cifrar, y quien lea el repositorio puede
+        falsificar sesiones.
+    patterns:
+      - pattern-either:
+          - patterns:
+              - pattern-either:
+                  - pattern: |
+                      $F({..., cookie: {..., secure: false, ...}, ...})
+                  - pattern: |
+                      $F({..., cookie: {..., httpOnly: false, ...}, ...})
+                  - pattern: |
+                      $F({..., secret: "...", ...})
+                  - pattern: |
+                      $F({..., secure: false, ...})
+                  - pattern: |
+                      $F({..., httpOnly: false, ...})
+                  - pattern: |
+                      $F({..., keys: ["..."], ...})
+              - metavariable-regex:
+                  metavariable: $F
+                  regex: ^(session|cookieSession|expressSession|fastifySession)$
+          - patterns:
+              - pattern-either:
+                  - pattern: |
+                      $R.$M($N, $V, {..., httpOnly: false, ...})
+                  - pattern: |
+                      $R.$M($N, $V, {..., secure: false, ...})
+              - metavariable-regex:
+                  metavariable: $R
+                  regex: ^(res|response|reply)$
+              - metavariable-regex:
+                  metavariable: $M
+                  regex: ^(cookie|setCookie)$
+          - pattern: cookieParser("...", ...)

@@ -1,0 +1,33 @@
+rules:
+  - id: PHP-CRY-001
+    languages: [php]
+    severity: ERROR
+    message: >-
+      Password protected with md5() or sha1(). They are fast, unsalted functions:
+      passwords can be recovered in minutes if the database leaks.
+    metadata:
+      cwe: "CWE-916"
+      owasp: "A04:2025 Cryptographic Failures"
+      severity_hdl: high
+      confidence: medium
+      message_es: >-
+        Contraseña protegida con md5() o sha1(). Son funciones rápidas y sin
+        sal: las contraseñas se recuperan en minutos si la base de datos se
+        filtra.
+      title: "Passwords hashed with md5/sha1 (PHP)"
+      recommendation: >-
+        Use password_hash() when storing and password_verify() when checking, and
+        migrate existing passwords at the next login.
+      title_es: "Contraseñas con md5/sha1 (PHP)"
+      recommendation_es: >-
+        Usar password_hash() al guardar y password_verify() al comprobar, y
+        migrar las contraseñas existentes en el siguiente inicio de sesión.
+    patterns:
+      - pattern-either:
+          - pattern: md5($X, ...)
+          - pattern: sha1($X, ...)
+          - pattern: hash("md5", $X, ...)
+          - pattern: hash("sha1", $X, ...)
+      - metavariable-regex:
+          metavariable: $X
+          regex: (?is).*(pass|pwd|clave|contrasen).*

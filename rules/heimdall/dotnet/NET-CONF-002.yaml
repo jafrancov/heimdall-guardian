@@ -1,0 +1,32 @@
+rules:
+  - id: NET-CONF-002
+    languages: [regex]
+    severity: WARNING
+    message: >-
+      ASP.NET configuration that is insecure for production: detailed errors
+      visible, compilation in debug mode or request validation turned off.
+    metadata:
+      cwe: "CWE-16"
+      owasp: "A02:2025 Security Misconfiguration"
+      severity_hdl: medium
+      confidence: high
+      message_es: >-
+        Configuración de ASP.NET insegura para producción: errores detallados
+        visibles, compilación en modo debug o validación de peticiones
+        desactivada.
+      title: "Insecure web.config (customErrors, debug, validateRequest)"
+      recommendation: >-
+        Use customErrors mode="RemoteOnly" or "On", compilation debug="false" and
+        keep validateRequest enabled.
+      title_es: "web.config inseguro (customErrors, debug, validateRequest)"
+      recommendation_es: >-
+        Usar customErrors mode="RemoteOnly" u "On", compilation debug="false"
+        y mantener validateRequest activo.
+    paths:
+      include:
+        - "*.config"
+        - "*.aspx"
+    pattern-either:
+      - pattern-regex: (?i)<customErrors[^>]*\bmode\s*=\s*"Off"
+      - pattern-regex: (?i)<compilation[^>]*\bdebug\s*=\s*"true"
+      - pattern-regex: (?i)\bvalidateRequest\s*=\s*"false"

@@ -1,0 +1,41 @@
+rules:
+  - id: PHP-AUTH-002
+    languages: [php]
+    severity: ERROR
+    message: >-
+      Laravel route declared outside a group with authentication middleware: it is
+      reachable without logging in.
+    metadata:
+      cwe: "CWE-306"
+      owasp: "A01:2025 Broken Access Control"
+      severity_hdl: high
+      confidence: low
+      message_es: >-
+        Ruta de Laravel declarada fuera de un grupo con middleware de
+        autenticación: es accesible sin iniciar sesión.
+      title: "Route without authentication middleware (Laravel)"
+      recommendation: >-
+        Declare the route inside Route::middleware('auth')->group(...) or chain
+        ->middleware('auth'). If it must be public, document it and accept the
+        finding with a justification.
+      title_es: "Ruta sin middleware de autenticación (Laravel)"
+      recommendation_es: >-
+        Declarar la ruta dentro de Route::middleware('auth')->group(...) o
+        encadenar ->middleware('auth'). Si debe ser pública, documentarlo y
+        aceptar el hallazgo con justificación.
+    paths:
+      include:
+        - "**/routes/*.php"
+    patterns:
+      - pattern: Route::$VERB($URI, ...)
+      - metavariable-regex:
+          metavariable: $VERB
+          regex: ^(get|post|put|patch|delete|any|match|resource|apiResource)$
+      - pattern-not-inside: Route::middleware("=~/^auth/")->group(...)
+      - pattern-not-inside: Route::middleware([..., "=~/^auth/", ...])->group(...)
+      - pattern-not-inside: $R->middleware("=~/^auth/")->group(...)
+      - pattern-not-inside: $R->middleware([..., "=~/^auth/", ...])->group(...)
+      - pattern-not-inside: Route::group([..., 'middleware' => "=~/^auth/", ...], ...)
+      - pattern-not-inside: Route::group([..., 'middleware' => [..., "=~/^auth/", ...], ...], ...)
+      - pattern-not-inside: $R->middleware("=~/^auth/")
+      - pattern-not-inside: $R->middleware([..., "=~/^auth/", ...])

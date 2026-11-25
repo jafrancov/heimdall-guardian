@@ -1,0 +1,74 @@
+rules:
+  - id: NODE-CRY-001
+    languages: [javascript, typescript]
+    severity: WARNING
+    message: >-
+      Weak cryptography: MD5 or SHA-1 hashing applied to passwords,
+      Math.random() used to generate tokens or passwords (not
+      cryptographically secure), createCipher without an initialization
+      vector, or encryption in ECB mode or with DES.
+    metadata:
+      cwe: "CWE-327"
+      owasp: "A04:2025 Cryptographic Failures"
+      severity_hdl: medium
+      confidence: medium
+      title_es: "Criptografía débil o aleatoriedad predecible (Node.js)"
+      title: "Weak cryptography or predictable randomness (Node.js)"
+      recommendation_es: >-
+        Para contraseñas usar bcrypt, scrypt (crypto.scrypt) o argon2. Para
+        tokens, crypto.randomBytes o crypto.randomUUID. Para cifrar,
+        createCipheriv con AES-256-GCM y un IV aleatorio por mensaje; nunca ECB.
+      recommendation: >-
+        For passwords, use bcrypt, scrypt (crypto.scrypt) or argon2. For
+        tokens, use crypto.randomBytes or crypto.randomUUID. For encryption,
+        use createCipheriv with AES-256-GCM and a random IV per message; never
+        ECB.
+      message_es: >-
+        Criptografía débil: hash MD5 o SHA-1 aplicado a contraseñas,
+        Math.random() para generar tokens o contraseñas (no es
+        criptográficamente seguro), createCipher sin vector de inicialización o
+        cifrado en modo ECB o DES.
+    patterns:
+      - pattern-either:
+          - patterns:
+              - pattern-either:
+                  - pattern: $C.createHash("md5").update($P, ...)
+                  - pattern: $C.createHash("sha1").update($P, ...)
+                  - pattern: $C.createHash("sha-1").update($P, ...)
+                  - pattern: md5($P)
+                  - pattern: sha1($P)
+                  - pattern: $H.md5($P)
+                  - pattern: $H.sha1($P)
+                  - pattern: CryptoJS.MD5($P)
+                  - pattern: CryptoJS.SHA1($P)
+              - metavariable-regex:
+                  metavariable: $P
+                  regex: (?i)^.*(passw|pwd|contrase|clave|secret).*$
+          - patterns:
+              - pattern-either:
+                  - pattern: $T = <... Math.random() ...>
+                  - pattern: |
+                      {..., $T: <... Math.random() ...>, ...}
+              - metavariable-regex:
+                  metavariable: $T
+                  regex: (?i)^.*(token|session|sesion|sid|passw|pwd|secret|otp|nonce|apikey|api_key|csrf|salt|codigo|code).*$
+          - patterns:
+              - pattern-either:
+                  - pattern: |
+                      function $F(...) {
+                        ...
+                        return <... Math.random() ...>;
+                      }
+                  - pattern: |
+                      $F = (...) => <... Math.random() ...>
+              - metavariable-regex:
+                  metavariable: $F
+                  regex: (?i)^.*(token|session|sesion|sid|passw|pwd|secret|otp|nonce|apikey|api_key|csrf|salt|codigo|code).*$
+          - pattern: $C.createCipher(...)
+          - pattern: $C.createDecipher(...)
+          - patterns:
+              - pattern: $C.createCipheriv($A, ...)
+              - metavariable-regex:
+                  metavariable: $A
+                  regex: (?i)^["'`](des.*|.*ecb.*)$
+          - pattern: CryptoJS.mode.ECB

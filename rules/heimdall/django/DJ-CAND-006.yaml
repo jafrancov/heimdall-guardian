@@ -1,0 +1,41 @@
+rules:
+  - id: DJ-CAND-006
+    languages: [python]
+    severity: INFO
+    message: >-
+      Data is deserialized from a value that is not a constant. It is only a point to review: the local AI checks whether untrusted input reaches it.
+    metadata:
+      candidate_kind: deser
+      cwe: "CWE-502"
+      owasp: "A08:2025 Software or Data Integrity Failures"
+      severity_hdl: medium
+      confidence: low
+      message_es: >-
+        Se deserializan datos de un valor que no es constante. Es solo un punto por revisar: la IA local comprueba si le llega entrada no confiable.
+      title: "Deserialization of a variable (to review)"
+      recommendation: >-
+        Never deserialize untrusted data with a format that can build arbitrary objects; use a data-only format such as JSON with a fixed schema, or restrict the allowed types.
+      title_es: "Deserialización de una variable (por revisar)"
+      recommendation_es: >-
+        Nunca deserialices datos no confiables con un formato que pueda construir objetos arbitrarios; usa un formato de solo datos como JSON con un esquema fijo, o restringe los tipos permitidos.
+    patterns:
+      - pattern-either:
+          - pattern: pickle.loads($X, ...)
+          - pattern: pickle.load($X, ...)
+          - pattern: cPickle.loads($X, ...)
+          - pattern: marshal.loads($X)
+          - pattern: shelve.open($X, ...)
+          - pattern: yaml.unsafe_load($X, ...)
+          - pattern: jsonpickle.decode($X, ...)
+          - pattern: dill.loads($X, ...)
+          - patterns:
+              - pattern: yaml.load($X, ...)
+              - pattern-not: yaml.load($X, Loader=yaml.SafeLoader)
+              - pattern-not: yaml.load($X, Loader=yaml.CSafeLoader)
+              - pattern-not: yaml.load($X, Loader=SafeLoader)
+              - pattern-not: yaml.load($X, Loader=CSafeLoader)
+              - pattern-not: yaml.load($X, yaml.SafeLoader)
+              - pattern-not: yaml.load($X, yaml.CSafeLoader)
+      - metavariable-regex:
+          metavariable: $X
+          regex: ^(?!\s*[rb]?(["'])[^"']*\1\s*$)

@@ -1,0 +1,46 @@
+rules:
+  - id: SWIFT-SQL-001
+    languages: [regex]
+    severity: ERROR
+    message: >-
+      SQL injection: the query is built with interpolation (\(value)) or
+      text concatenation instead of bound arguments. A value such as `' OR
+      1=1 --` alters the query and can read or delete the application's
+      local database.
+    metadata:
+      cwe: "CWE-89"
+      owasp: "A05:2025 Injection"
+      severity_hdl: high
+      confidence: medium
+      title_es: "Consulta SQL construida con texto (SQLite, GRDB o FMDB, Swift/iOS)"
+      title: "SQL query built from text (SQLite, GRDB or FMDB, Swift/iOS)"
+      recommendation_es: >-
+        Usar marcadores ? o :nombre con la lista de argumentos
+        (db.execute(sql: "... WHERE id = ?", arguments: [id]) en GRDB,
+        executeQuery("... ?", values: [id]) en FMDB, sqlite3_bind_* con
+        sqlite3_prepare_v2). En GRDB, la interpolación solo es segura con
+        SQL literal (execute(literal:) o la API de consulta tipada). Nunca
+        interpolar valores en el SQL.
+      recommendation: >-
+        Use ? or :name placeholders with the argument list (db.execute(sql:
+        "... WHERE id = ?", arguments: [id]) in GRDB, executeQuery("... ?",
+        values: [id]) in FMDB, sqlite3_bind_* with sqlite3_prepare_v2). In
+        GRDB, interpolation is safe only with literal SQL (execute(literal:)
+        or the typed query API). Never interpolate values into the SQL.
+      message_es: >-
+        Inyección SQL: la consulta se arma con interpolación (\(valor)) o
+        concatenación de texto en lugar de argumentos enlazados. Un valor como
+        `' OR 1=1 --` altera la consulta y puede leer o borrar la base local de
+        la aplicación.
+    paths:
+      include:
+        - "*.swift"
+    pattern-either:
+      - pattern-regex: >-
+          (?m)^(?![ \t]*//)[^\n]*?\b(?:sqlite3_exec|sqlite3_prepare(?:_v2|_v3|16_v2)?|executeQuery|executeUpdate|executeStatements|fetchAll|fetchOne|fetchCursor|fetchSet|fetchCount)\((?:[^"\n]*?,\s*)?(?:sql:\s*)?(?:"""(?:(?!""")[^\\]|\\[^(])*?\\\(|"(?:[^"\\\n]|\\[^(\n])*?\\\()
+      - pattern-regex: >-
+          (?m)^(?![ \t]*//)[^\n]*?\b(?:sql|query):\s*(?:"""(?:(?!""")[^\\]|\\[^(])*?\\\(|"(?:[^"\\\n]|\\[^(\n])*?\\\()
+      - pattern-regex: >-
+          (?m)^(?![ \t]*//)[^\n]*?\b(?:db|database|connection|conn|dbQueue|dbPool|sqlite)\w*\.(?:execute|prepare|run|scalar|executeQuery|executeUpdate)\((?:sql:\s*)?(?:"""(?:(?!""")[^\\]|\\[^(])*?\\\(|"(?:[^"\\\n]|\\[^(\n])*?\\\()
+      - pattern-regex: >-
+          (?m)^(?![ \t]*//)[^\n]*?\b(?:(?:sqlite3_exec|sqlite3_prepare(?:_v2|_v3|16_v2)?|executeQuery|executeUpdate|executeStatements|fetchAll|fetchOne|fetchCursor|fetchSet|fetchCount)|(?:db|database|connection|conn|dbQueue|dbPool|sqlite)\w*\.(?:execute|prepare|run|scalar))\((?:[^"\n]*?,\s*)?(?:sql:\s*)?"(?:[^"\\\n]|\\[^\n])*"\s*\+\s*[A-Za-z_(]

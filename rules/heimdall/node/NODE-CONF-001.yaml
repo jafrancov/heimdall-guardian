@@ -1,0 +1,83 @@
+rules:
+  - id: NODE-CONF-001
+    languages: [javascript, typescript]
+    severity: WARNING
+    message: >-
+      Permissive CORS with credentials: the server accepts requests carrying
+      cookies or authentication headers from any site (origin '*', true, or
+      the reflected request origin). A third-party page can act on behalf of
+      the authenticated user.
+    metadata:
+      cwe: "CWE-942"
+      owasp: "A02:2025 Security Misconfiguration"
+      severity_hdl: medium
+      confidence: high
+      title_es: "CORS abierto a cualquier origen con credenciales (Node.js)"
+      title: "CORS open to any origin with credentials (Node.js)"
+      recommendation_es: >-
+        Declarar una lista cerrada de orígenes permitidos (origin:
+        ['https://app.ejemplo.com']) o una función que la consulte, y activar
+        credentials solo para ellos. Nunca reflejar el origen de la petición sin
+        comprobarlo.
+      recommendation: >-
+        Declare a closed list of allowed origins (origin:
+        ['https://app.example.com']) or a function that checks against one,
+        and enable credentials only for them. Never reflect the request origin
+        without validating it.
+      message_es: >-
+        CORS permisivo con credenciales: el servidor acepta peticiones con
+        cookies o cabeceras de autenticación desde cualquier sitio (origin '*',
+        true, o el origen reflejado de la petición). Una página ajena puede
+        actuar en nombre de la persona autenticada.
+    patterns:
+      - pattern-either:
+          - patterns:
+              - pattern: |
+                  {..., credentials: true, ...}
+              - pattern-either:
+                  - pattern: |
+                      {..., origin: true, ...}
+                  - pattern: |
+                      {..., origin: "*", ...}
+                  - pattern: |
+                      {..., origin: $R.headers.origin, ...}
+                  - pattern: |
+                      {..., origin: $R.get("origin"), ...}
+                  - pattern: |
+                      {..., origin: $R.header("origin"), ...}
+                  - pattern: |
+                      {..., origin: ($O, $CB) => $CB(null, true), ...}
+                  - pattern: |
+                      {..., origin: function ($O, $CB) { $CB(null, true); }, ...}
+          - patterns:
+              - pattern-either:
+                  - pattern: $RES.$M("Access-Control-Allow-Origin", $R.headers.origin)
+                  - pattern: $RES.$M("Access-Control-Allow-Origin", $R.get("origin"))
+                  - pattern: $RES.$M("Access-Control-Allow-Origin", $R.header("origin"))
+              - pattern-either:
+                  - pattern-inside: |
+                      function $F(...) {
+                        ...
+                        $RES2.$M2("Access-Control-Allow-Credentials", "true")
+                        ...
+                      }
+                  - pattern-inside: |
+                      function (...) {
+                        ...
+                        $RES2.$M2("Access-Control-Allow-Credentials", "true")
+                        ...
+                      }
+                  - pattern-inside: |
+                      ($...A) => {
+                        ...
+                        $RES2.$M2("Access-Control-Allow-Credentials", "true")
+                        ...
+                      }
+                  - pattern-inside: |
+                      class $C {
+                        $MM(...) {
+                          ...
+                          $RES2.$M2("Access-Control-Allow-Credentials", "true")
+                          ...
+                        }
+                      }

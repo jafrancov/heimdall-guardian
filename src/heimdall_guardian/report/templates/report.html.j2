@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="{{ html_lang }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ t('report.html.title', project=p.project.name) }}</title>
+<style>
+:root {
+  --ink: {{ structure.noche }}; --muted: #6a655c; --line: {{ structure.line }}; --paper: #f3f2ef; --card: #fff;
+  --accent: {{ structure.noche }}; --gold: {{ structure.oro }}; --bronze: {{ structure.bronce }};
+  {% for name in severities %}
+  --s{{ loop.index0 }}: {{ colors[name][0] }}; --s{{ loop.index0 }}-on: {{ colors[name][1] }}; --s{{ loop.index0 }}-bg: {{ colors[name][2] }}; --s{{ loop.index0 }}-ink: {{ colors[name][3] }};
+  {% endfor %}
+  --ok: {{ ok[0] }}; --ok-bg: {{ ok[2] }}; --ok-ink: {{ ok[3] }};
+}
+* { box-sizing: border-box; }
+{% if watermark %}
+body::before { content: ""; position: fixed; right: 2vw; bottom: 2vh; width: min(46vw, 520px); aspect-ratio: 406 / 480; background: url({{ watermark }}) center / contain no-repeat; opacity: .05; pointer-events: none; z-index: 0; }
+main, .cover { position: relative; z-index: 1; }
+{% endif %}
+body { margin: 0; background: var(--paper); color: var(--ink); line-height: 1.5;
+  font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+main { max-width: 1040px; margin: 0 auto; padding: 0 20px 64px; }
+h1, h2, h3 { line-height: 1.2; margin: 0; text-wrap: balance; }
+h2 { font-size: 20px; margin: 48px 0 16px; padding-bottom: 8px; border-bottom: 2px solid var(--gold); }
+h3 { font-size: 15px; }
+p { margin: 0 0 8px; }
+code, pre, .mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 13px; }
+.muted { color: var(--muted); }
+.num { font-variant-numeric: tabular-nums; }
+
+.cover { background: var(--accent); color: #fff; padding: 40px 0 32px; border-bottom: 4px solid var(--gold); }
+.cover .inner { max-width: 1040px; margin: 0 auto; padding: 0 20px; }
+.cover .brand { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
+.cover .name { font-size: 20px; font-weight: 700; color: var(--gold); letter-spacing: .02em; }
+.cover .kicker { font-size: 13px; opacity: .85; }
+.cover h1 { font-size: 32px; margin: 6px 0 20px; }
+.cover dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px 24px; margin: 0; }
+.cover dt { font-size: 12px; opacity: .75; }
+.cover dd { margin: 0; overflow-wrap: anywhere; }
+
+.light { display: flex; gap: 16px; align-items: center; padding: 16px 20px; border-radius: 8px;
+  border: 1px solid var(--line); background: var(--card); margin-top: 24px; }
+.verdict { background: var(--card); border: 1px solid var(--line); border-left: 6px solid var(--ok); border-radius: 8px; padding: 16px 20px; margin-top: 24px; }
+.verdict.no { border-left-color: var(--s0); }
+.verdict strong { display: block; font-size: 26px; margin: 2px 0 10px; color: var(--ok-ink); }
+.verdict.no strong { color: var(--s0); } .verdict.obs { border-left-color: var(--s2); } .verdict.obs strong { color: var(--s2-ink); }
+.verdict p { margin-top: 10px; }
+.light .dot { width: 28px; height: 28px; border-radius: 50%; flex: none; }
+.light.rojo .dot { background: var(--s0); } .light.amarillo .dot { background: var(--s2); }
+.light.rojo { border-left: 6px solid var(--s0); } .light.amarillo { border-left: 6px solid var(--s2); } .light.verde { border-left: 6px solid var(--ok); }
+.light.verde .dot { background: var(--ok); }
+.light strong { display: block; font-size: 17px; }
+
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin: 16px 0; }
+.tile { background: var(--card); border: 1px solid var(--line); border-top: 4px solid; border-radius: 6px; padding: 12px 14px; }
+.tile b { display: block; font-size: 28px; line-height: 1.1; }
+.tile span { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.c0 { border-color: var(--s0); } .c1 { border-color: var(--s1); } .c2 { border-color: var(--s2); }
+.c3 { border-color: var(--s3); } .c4 { border-color: var(--s4); }
+
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.panel { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 16px 20px; }
+.panel h3 { margin-bottom: 12px; }
+ol.risks { margin: 0; padding-left: 20px; } ol.risks li { margin-bottom: 8px; }
+table { border-collapse: collapse; width: 100%; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+td.r, th.r { text-align: right; }
+td.wide { min-width: 260px; }
+.scroll { overflow-x: auto; background: var(--card); border: 1px solid var(--line); border-radius: 8px; }
+
+.badge { display: inline-block; padding: 1px 8px; border-radius: 99px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.b0 { background: var(--s0); color: var(--s0-on); } .b1 { background: var(--s1); color: var(--s1-on); }
+.b2 { background: var(--s2); color: var(--s2-on); } .b3 { background: var(--s3-bg); color: var(--s3-ink); }
+.b4 { background: var(--s4-bg); color: var(--s4-ink); }
+.state { border: 1px solid var(--line); color: var(--muted); font-weight: 500; }
+.state.new { border-color: var(--ink); color: var(--ink); }
+.state.fixed { background: var(--ok-bg); color: var(--ok-ink); border-color: transparent; }
+
+.cov { display: inline-block; padding: 1px 10px; border-radius: 99px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+{% for level, c in coverage_colors.items() %}
+.cov-{{ loop.index0 }} { background: {{ c[2] }}; color: {{ c[3] }}; }
+{% endfor %}
+.top10 td { font-size: 14px; }
+.bar { display: grid; grid-template-columns: minmax(180px, 2fr) 3fr auto; gap: 12px; align-items: center; margin-bottom: 6px; }
+.bar i { display: block; height: 10px; border-radius: 5px; background: var(--gold); min-width: 2px; }
+.tile b { color: var(--ink); }
+
+.filters { position: sticky; top: 0; z-index: 2; background: var(--paper); padding: 10px 0; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; border-bottom: 1px solid var(--line); }
+.filters input[type=search] { flex: 1 1 220px; padding: 7px 10px; border: 1px solid var(--line); border-radius: 6px; font: inherit; }
+.filters select { padding: 7px 8px; border: 1px solid var(--line); border-radius: 6px; font: inherit; background: var(--card); }
+.finding { background: var(--card); border: 1px solid var(--line); border-left: 4px solid; border-radius: 6px; padding: 14px 18px; margin: 12px 0; break-inside: avoid; }
+.finding.suppressed { opacity: .65; }
+.finding header { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; margin-bottom: 6px; }
+.finding h3 { flex: 1 1 320px; }
+.finding .where { overflow-wrap: anywhere; margin-bottom: 8px; }
+pre { background: #101824; color: #e6edf5; padding: 12px 14px; border-radius: 6px; overflow-x: auto; margin: 8px 0 12px; white-space: pre; }
+.finding dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 14px; margin: 0; }
+.finding dt { color: var(--muted); font-size: 13px; } .finding dd { margin: 0; overflow-wrap: anywhere; }
+.ai { border: 1px dashed var(--bronze); background: #fbf5e4; border-radius: 6px; padding: 10px 14px; margin-top: 10px; }
+.note { border-left: 4px solid var(--gold); background: var(--card); padding: 12px 16px; border-radius: 0 6px 6px 0; }
+ul.plain { margin: 0; padding-left: 20px; }
+.chart text { font-size: 11px; fill: var(--muted); }
+.f0 { fill: var(--s0); } .f1 { fill: var(--s1); } .f2 { fill: var(--s2); } .f3 { fill: var(--s3); } .f4 { fill: var(--s4); }
+.empty { color: var(--muted); font-style: italic; }
+[hidden] { display: none !important; }
+
+@media (max-width: 720px) { .cols { grid-template-columns: 1fr; } .filters { position: static; } .bar { grid-template-columns: 1fr; gap: 2px; } }
+@media print {
+  body { background: #fff; font-size: 12px; } .filters { display: none; } .cover { color: var(--ink); background: none; border-bottom: 3px solid var(--ink); }
+  pre { background: #f2f3f5; color: var(--ink); white-space: pre-wrap; } h2 { break-after: avoid; } .finding.suppressed { opacity: 1; }
+}
+</style>
+</head>
+<body>
+<div class="cover"><div class="inner">
+  <div class="brand">{% if logo %}<img src="{{ logo }}" alt="" width="64" height="59">{% endif %}
+    <div><div class="name">Heimdall Guardian</div><div class="kicker">{{ t('report.html.kicker', tagline=tagline) }}</div></div></div>
+  <h1>{{ p.project.name }}</h1>
+  <dl>
+    <div><dt>{{ t('report.html.date') }}</dt><dd>{{ p.run.started[:16] | replace("T", " ") }}</dd></div>
+    <div><dt>{{ t('report.profile') }}</dt><dd>{{ profile_name(p.run.profile) }} ({{ p.run.modules | join(", ") }})</dd></div>
+    <div><dt>{{ t('report.run') }}</dt><dd>{% if baseline %}{{ t('report.run_number', run=baseline.run) }}{% else %}{{ t('report.no_baseline') }}{% endif %}</dd></div>
+    <div><dt>{{ t('report.files') }}</dt><dd class="num">{{ p.project.files_analyzed }}</dd></div>
+    <div><dt>{{ t('report.version') }}</dt><dd>{{ p.heimdall_version }}{% if p.run.rules_version %} · {{ t('report.html.rules', version=p.run.rules_version) }}{% endif %}</dd></div>
+    <div style="grid-column: 1 / -1"><dt>{{ t('report.html.hash') }}</dt><dd class="mono">{{ p.project.tree_hash }}</dd></div>
+  </dl>
+</div></div>
+
+<main>
+<section id="summary">
+  {% if p.verdict %}
+  <div class="verdict {{ 'no' if p.verdict.outcome == 'not_approved' else ('obs' if 'observations' in p.verdict.outcome else 'ok') }}">
+    <div class="muted">{{ t('report.verdict.title') }}</div>
+    <strong>{{ p.verdict.outcome | lbl('outcome') }}</strong>
+    <table>
+      <thead><tr><th>{{ t('report.verdict.criterion') }}</th><th class="r">{{ t('report.verdict.found') }}</th><th class="r">{{ t('report.verdict.maximum') }}</th><th>{{ t('report.verdict.result') }}</th></tr></thead>
+      <tbody>
+      {% for c in p.verdict.criteria %}
+      <tr><td>{{ c.criterion | r }}</td><td class="r num">{{ c.found }}</td><td class="r num">{{ c.limit }}</td>
+        <td>{% if c.exceeded %}<span class="badge b0">{{ t('report.verdict.exceeded_blocking' if c.blocking else 'report.verdict.exceeded') }}</span>{% else %}{{ t('report.verdict.within') }}{% endif %}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% if not p.verdict.default_thresholds %}<p class="muted">{{ t('report.verdict.custom_thresholds') }}</p>{% endif %}
+    {% if p.verdict.accepted_findings %}<p class="muted">{{ tn('report.verdict.accepted', p.verdict.accepted_findings | length, ids=p.verdict.accepted_findings | map(attribute='id') | join(', ')) }}</p>{% endif %}
+    <p class="muted">{{ t('report.verdict.issuer', issuer=p.verdict.issuer, date=p.verdict.issued[:16] | replace("T", " ")) }}<br>
+      {{ t('report.verdict.signature') }}: <span class="mono">{{ p.verdict.signature }}</span></p>
+  </div>
+  {% endif %}
+
+  <div class="light {{ light }}"><span class="dot" aria-hidden="true"></span>
+    <div><strong>{{ t('report.light.label', color=light_name) }}</strong>{{ light_text }}</div></div>
+
+  <div class="tiles">
+    {% for severity in severities %}
+    <div class="tile c{{ loop.index0 }}"><b class="num">{{ counts.get(severity, 0) }}</b><span>{{ severity | lbl('severity') }}</span></div>
+    {% endfor %}
+  </div>
+  <p class="muted">{{ t('report.summary.open_total', count=open_total) }}</p>
+
+  {% if p.ai_summary %}
+  <div class="ai" style="margin-top: 20px"><strong>{{ t('report.ai.summary_heading', label=t('llm.ai_label')) }}</strong>
+    <p style="margin-top: 6px">{{ p.ai_summary.text }}</p>
+    <div class="muted">{{ t('report.ai.summary_note', model=p.ai_summary.model) }}</div></div>
+  {% endif %}
+
+  {% if plan %}
+  <div class="panel" style="margin-top: 20px">
+    <h3>{{ t('report.plan.title') }}</h3>
+    <p class="muted">{{ t('report.plan.help') }}</p>
+    <ol class="risks">
+      {% for item in plan %}
+      <li><span class="badge b{{ severities.index(item.severity) }}">{{ item.severity | lbl('severity') }}</span>
+        {{ item.line }}
+        <div class="muted" style="font-size: 12px">{{ item.ids }}</div></li>
+      {% endfor %}
+    </ol>
+  </div>
+  {% endif %}
+
+  <div class="cols" style="margin-top: 20px">
+    <div class="panel">
+      <h3>{{ t('report.risks.title') }}</h3>
+      {% if top_risks %}
+      <ol class="risks">
+        {% for risk in top_risks %}
+        <li><span class="badge b{{ severities.index(risk.severity) }}">{{ risk.severity | lbl('severity') }}</span>
+          {{ risk.title }}
+          <span class="muted">{{ t('report.risks.detail', cases=tn('report.risks.cases', risk.count), files=tn('report.risks.files', risk.files)) }}</span></li>
+        {% endfor %}
+      </ol>
+      {% else %}<p class="empty">{{ t('report.no_open') }}</p>{% endif %}
+    </div>
+    <div class="panel">
+      <h3>{{ t('report.compare.title') }}</h3>
+      {% if baseline and baseline.previous_run %}
+      <table>
+        <tr><td>{{ t('report.compare.new') }}</td><td class="r num">{{ states.get("new", 0) }}</td></tr>
+        <tr><td>{{ t('report.compare.persistent') }}</td><td class="r num">{{ states.get("persistent", 0) }}</td></tr>
+        <tr><td>{{ t('report.compare.fixed') }}</td><td class="r num">{{ states.get("fixed", 0) }}</td></tr>
+        <tr><td>{{ t('report.compare.accepted') }}</td><td class="r num">{{ states.get("accepted", 0) }}</td></tr>
+        <tr><td>{{ t('report.compare.false_positive') }}</td><td class="r num">{{ states.get("false_positive", 0) }}</td></tr>
+      </table>
+      {% elif baseline %}
+      <p class="empty">{{ t('report.compare.first_run') }}</p>
+      {% else %}
+      <p class="empty">{{ t('report.compare.no_baseline') }}</p>
+      {% endif %}
+      {% if trend %}
+      <h3 style="margin-top: 16px">{{ t('report.trend.title') }}</h3>
+      <svg class="chart" role="img" aria-label="{{ t('report.trend.aria') }}" viewBox="0 -16 {{ trend.width }} {{ trend.height + 34 }}" style="max-width: {{ trend.width }}px; width: 100%">
+        {% for bar in trend.bars %}
+        {% for s in bar.segments %}<rect class="f{{ s.cls }}" x="{{ bar.x }}" y="{{ s.y }}" width="{{ trend.bar_width }}" height="{{ s.h }}"><title>{{ t('report.trend.bar', run=bar.run, date=bar.date, label=s.label, count=s.count) }}</title></rect>{% endfor %}
+        <text x="{{ bar.x + trend.bar_width / 2 }}" y="-4" text-anchor="middle">{{ bar.total }}</text>
+        <text x="{{ bar.x + trend.bar_width / 2 }}" y="{{ trend.height + 14 }}" text-anchor="middle">{{ t('report.run_number', run=bar.run) }}</text>
+        {% endfor %}
+      </svg>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<section id="que-revisa">
+  <h2>{{ t('report.coverage.title') }}</h2>
+  <div class="panel">
+    <h3>{{ t('report.coverage.what_is') }}</h3>
+    <p>{{ what_is_owasp }}</p>
+  </div>
+  <div class="scroll" style="margin-top: 16px"><table class="top10">
+    <thead><tr><th>{{ t('report.coverage.category') }}</th><th>{{ t('report.coverage.meaning') }}</th><th>{{ t('report.coverage.example') }}</th><th>{{ t('report.coverage.coverage') }}</th><th class="r">{{ t('report.coverage.open') }}</th></tr></thead>
+    <tbody>
+    {% for c in top10 %}
+    <tr>
+      <td class="wide"><strong>{{ c.code }}:2025 {{ c.name }}</strong>{% if not english %}<br><span class="muted">{{ c.name_en }}</span>{% endif %}</td>
+      <td class="wide">{{ c.explanation }}</td>
+      <td class="wide">{{ c.example }}</td>
+      <td class="wide"><span class="cov cov-{{ coverage_levels.index(c.coverage) }}">{{ c.coverage_text }}</span><br><span class="muted">{{ c.coverage_note }}</span></td>
+      <td class="r num">{{ c.count }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  <p class="note" style="margin-top: 16px">{{ scope_warning }}</p>
+</section>
+
+<section id="owasp">
+  <h2>{{ t('report.owasp_map.title') }}</h2>
+  {% for name, count in owasp %}
+  <div class="bar"><span>{{ name }}</span><i style="width: {{ (count / owasp_max * 100) | round(1) }}%"></i><span class="num">{{ count }}</span></div>
+  {% else %}<p class="empty">{{ t('report.no_open') }}</p>{% endfor %}
+</section>
+
+{% if p.endpoints %}
+<section id="endpoints">
+  <h2>{{ t('report.endpoints.title') }}</h2>
+  <p class="muted">{{ t('report.endpoints.summary', total=p.endpoints | length, open=p.endpoints | selectattr("has_auth", "false") | list | length) }}</p>
+  <div class="scroll"><table>
+    <thead><tr><th>{{ t('report.endpoints.method') }}</th><th>{{ t('report.endpoints.route') }}</th><th>{{ t('report.endpoints.handler') }}</th><th>{{ t('report.endpoints.requires_auth') }}</th><th>{{ t('report.endpoints.has_auth') }}</th><th>{{ t('report.endpoints.idor') }}</th><th>{{ t('report.endpoints.source') }}</th></tr></thead>
+    <tbody>
+    {% for e in p.endpoints %}
+    <tr><td class="mono">{{ methods_label(e.methods) }}</td>
+      <td class="mono">{{ e.path }}</td>
+      <td><span class="mono">{{ e.handler }}</span><br><span class="muted mono">{{ e.file }}:{{ e.line }}</span></td>
+      <td>{{ t('report.yes') if e.requires_auth else t('report.endpoints.public_by_design') }}</td>
+      <td class="wide">{% if e.has_auth is none %}<span class="badge b2">{{ t('report.undetermined') }}</span>{% elif e.has_auth %}<span class="badge state fixed">{{ t('report.yes') }}</span>{% else %}<span class="badge b{{ 0 if e.writes else 1 }}">{{ t('report.endpoints.no_write') if e.writes else t('report.no') }}</span>{% endif %}
+        <br><span class="muted">{{ e.evidence | r }}</span></td>
+      <td>{% if e.idor_risk is none %}{{ t('report.endpoints.not_evaluated') }}{% else %}{{ risk_level(e.idor_risk) }} <span class="muted">({{ t('report.endpoints.ai') }})</span>{% endif %}</td><td>{{ e.source }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</section>
+{% endif %}
+
+<section id="findings">
+  <h2>{{ t('report.findings.title') }}</h2>
+  {% if code_total %}
+  <div class="filters">
+    <input type="search" id="q" placeholder="{{ t('report.findings.search') }}" aria-label="{{ t('report.findings.search_aria') }}">
+    <select id="f-sev" aria-label="{{ t('report.findings.severity') }}"><option value="">{{ t('report.findings.any_severity') }}</option>{% for s in severities %}<option value="{{ s }}">{{ s | lbl('severity') }}</option>{% endfor %}</select>
+    <select id="f-cat" aria-label="{{ t('report.findings.category') }}"><option value="">{{ t('report.findings.any_category') }}</option>{% for c in p.summary.by_category %}{% if c != "dependencies" %}<option value="{{ c }}">{{ c | lbl('category') }}</option>{% endif %}{% endfor %}</select>
+    <select id="f-est" aria-label="{{ t('report.findings.status') }}"><option value="">{{ t('report.findings.any_status') }}</option>{% for st in ('new', 'persistent', 'accepted', 'false_positive') %}<option value="{{ st }}">{{ st | lbl('status') }}</option>{% endfor %}</select>
+    <select id="f-ori" aria-label="{{ t('report.findings.origin') }}"><option value="">{{ t('report.findings.any_origin') }}</option>{% for o in ('deterministic', 'ai') %}<option value="{{ o }}">{{ o | lbl('origin') }}</option>{% endfor %}</select>
+    <span class="muted num" id="shown"></span>
+  </div>
+  {% for severity, items in groups %}{% for f in items %}
+  <article class="finding c{{ severities.index(severity) }}{{ ' suppressed' if f.baseline_status in ('accepted', 'false_positive') }}"
+    data-sev="{{ f.severity }}" data-cat="{{ f.category }}" data-est="{{ f.baseline_status }}" data-ori="{{ f.origin }}">
+    <header>
+      <span class="badge b{{ severities.index(severity) }}">{{ f.severity | lbl('severity') }}</span>
+      <h3>{{ text_of(f, 'title') }}</h3>
+      <span class="badge state {{ f.baseline_status }}">{{ f.baseline_status | lbl('status') }}</span>
+      <span class="mono muted">{{ f.id }}</span>
+    </header>
+    <div class="where mono">{{ f.file }}{% if f.line_start %}:{{ f.line_start }}{% endif %}</div>
+    {% if f.snippet %}<pre>{{ f.snippet }}</pre>{% endif %}
+    <dl>
+      {% if text_of(f, 'description') %}<dt>{{ t('report.finding.what') }}</dt><dd>{{ text_of(f, 'description') }}</dd>{% endif %}
+      <dt>{{ t('report.finding.fix') }}</dt><dd>{{ text_of(f, 'recommendation') }}</dd>
+      <dt>{{ t('report.finding.classification') }}</dt><dd>{{ f.category | lbl('category') }}{% if f.cwe %} · {{ f.cwe }}{% endif %}{% if f.owasp %} · {{ f.owasp }}{% endif %}</dd>
+      <dt>{{ t('report.finding.origin') }}</dt><dd>{{ f.origin | lbl('origin') }} · {{ f.detected_by | join(", ") }} · {{ t('report.finding.rule', rule=f.rule_id) }} · {{ t('report.finding.confidence', level=f.confidence | lbl('confidence', 'lower')) }}</dd>
+      {% if f.verification_hint %}<dt>{{ t('report.finding.verify') }}</dt><dd>{{ f.verification_hint }}</dd>{% endif %}
+      {% if f.references %}<dt>{{ t('report.finding.references') }}</dt><dd>{% for r in f.references %}{{ r }}{% if not loop.last %}<br>{% endif %}{% endfor %}</dd>{% endif %}
+    </dl>
+    {% if f.llm_assessment %}
+    <div class="ai"><strong>{{ t('llm.ai_label') }}</strong>
+      {% if f.llm_assessment.verdict is defined %}<div>{{ t('report.ai.verdict') }}: <strong>{{ ai_verdict(f.llm_assessment.verdict) }}</strong> ({{ t('report.ai.confidence', level=ai_level(f.llm_assessment.confidence)) }})</div>{% endif %}
+      {% if f.llm_assessment.idor_risk is defined %}<div>{{ t('report.ai.risk_idor') }}: <strong>{{ risk_level(f.llm_assessment.idor_risk) }}</strong> · {{ t('report.ai.risk_flow') }}: <strong>{{ risk_level(f.llm_assessment.flow_risk) }}</strong></div>{% endif %}
+      {% if f.llm_assessment.reachable is defined %}<div>{{ t('report.ai.reachable') }}: <strong>{{ ai_reachable(f.llm_assessment.reachable) }}</strong>{% if f.llm_assessment.get("source") %} · {{ t('report.ai.source') }}: {{ f.llm_assessment.source }}{% endif %}{% if f.llm_assessment.get("risk") %} · {{ t('report.ai.risk_sink') }}: <strong>{{ risk_level(f.llm_assessment.risk) }}</strong>{% endif %}</div>{% endif %}
+      <div>{{ f.llm_assessment.get("explanation", "") | r }}</div>
+      {% if f.llm_assessment.get("suggested_fix") %}<div><em>{{ t('report.ai.suggested_fix') }}</em> {{ f.llm_assessment.suggested_fix }}</div>{% endif %}
+      <div class="muted">{{ t('report.ai.model_note', model=f.llm_assessment.get("model", t('report.ai.unknown_model'))) }}</div></div>
+    {% endif %}
+  </article>
+  {% endfor %}{% endfor %}
+  {% else %}<p class="empty">{{ t('report.findings.none') }}</p>{% endif %}
+</section>
+
+<section id="dependencias">
+  <h2>{{ t('report.dependencies.title') }}</h2>
+  {% if dependencies %}
+  <div class="scroll"><table>
+    <thead><tr><th>{{ t('report.dependencies.severity') }}</th><th>{{ t('report.dependencies.package') }}</th><th>{{ t('report.dependencies.vulnerability') }}</th><th>{{ t('report.dependencies.fix') }}</th><th>{{ t('report.dependencies.file') }}</th><th>{{ t('report.dependencies.status') }}</th></tr></thead>
+    <tbody>
+    {% for f in dependencies %}
+    <tr><td><span class="badge b{{ severities.index(f.severity) }}">{{ f.severity | lbl('severity') }}</span></td>
+      <td class="mono">{{ f.snippet }}</td><td class="mono">{{ f.rule_id }}</td>
+      <td class="wide">{{ text_of(f, 'recommendation') }}</td><td class="mono">{{ f.file }}</td>
+      <td><span class="badge state {{ f.baseline_status }}">{{ f.baseline_status | lbl('status') }}</span></td></tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}<p class="empty">{{ t('report.dependencies.none') }}</p>{% endif %}
+</section>
+
+{% if fixed %}
+<section id="fixed">
+  <h2>{{ t('report.fixed.title') }}</h2>
+  <div class="scroll"><table>
+    <thead><tr><th>ID</th><th>{{ t('report.dependencies.severity') }}</th><th>{{ t('report.fixed.finding') }}</th><th>{{ t('report.fixed.previous_location') }}</th></tr></thead>
+    <tbody>
+    {% for f in fixed %}
+    <tr><td class="mono">{{ f.id }}</td><td><span class="badge b{{ severities.index(f.severity) }}">{{ f.severity | lbl('severity') }}</span></td>
+      <td>{{ text_of(f, 'title') }}</td><td class="mono">{{ f.file }}{% if f.line_start %}:{{ f.line_start }}{% endif %}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</section>
+{% endif %}
+
+<section id="anexo">
+  <h2>{{ t('report.annex.title') }}</h2>
+  <div class="scroll"><table>
+    <thead><tr><th>{{ t('report.annex.tool') }}</th><th>{{ t('report.annex.version') }}</th><th>{{ t('report.annex.status') }}</th><th class="r">{{ t('report.annex.findings') }}</th><th>{{ t('report.annex.database') }}</th><th>{{ t('report.annex.detail') }}</th></tr></thead>
+    <tbody>
+    {% for tool in p.tools %}
+    <tr><td>{{ tool.name }}</td><td class="mono">{{ tool.version or "—" }}</td><td>{{ tool_status(tool.status) }}</td>
+      <td class="r num">{{ tool.findings }}</td><td>{{ database_label(tool) }}</td><td>{{ tool.detail | r }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  <div class="cols" style="margin-top: 20px">
+    <div class="panel"><h3>{{ t('report.annex.limitations') }}</h3>
+      {% if p.limitations %}<ul class="plain">{% for l in p.limitations %}<li>{{ l | r }}</li>{% endfor %}</ul>
+      {% else %}<p class="empty">{{ t('report.annex.none') }}</p>{% endif %}</div>
+    <div class="panel"><h3>{{ t('report.annex.excluded') }}</h3><p class="mono">{{ p.run.exclusions | join(", ") }}</p>
+      <h3 style="margin-top: 12px">{{ t('report.annex.stack') }}</h3><p>{% for s in p.stack %}{{ s.stack }}{% if not loop.last %}, {% endif %}{% else %}{{ t('report.annex.no_stack') }}{% endfor %}</p></div>
+  </div>
+  {% if omitted %}<div class="panel" style="margin-top: 20px"><h3>{{ t('report.omitted.title') }}</h3>
+    {% if omitted.sentence %}<p>{{ omitted.sentence }}</p>{% endif %}
+    {% if omitted.entries %}<ul class="plain mono">{% for e in omitted.entries %}<li>{{ e }}</li>{% endfor %}{% if omitted.more %}<li>{{ omitted.more }}</li>{% endif %}</ul>{% endif %}
+    {% if omitted.findings %}<p>{{ omitted.findings }}</p>{% endif %}</div>{% endif %}
+  {% if p.sbom %}<p style="margin-top: 16px">{{ t('report.sbom.note', version=p.sbom.specVersion, count=(p.sbom.components or []) | length) }}</p>{% endif %}
+  <p class="note" style="margin-top: 24px"><strong>{{ t('report.scope') }}</strong> {{ disclaimer }}</p>
+</section>
+</main>
+
+<script>
+(function () {
+  var cards = Array.prototype.slice.call(document.querySelectorAll(".finding"));
+  if (!cards.length) return;
+  var q = document.getElementById("q"), shown = document.getElementById("shown");
+  var selects = { sev: "f-sev", cat: "f-cat", est: "f-est", ori: "f-ori" };
+  function apply() {
+    var text = q.value.trim().toLowerCase(), count = 0;
+    cards.forEach(function (card) {
+      var ok = !text || card.textContent.toLowerCase().indexOf(text) !== -1;
+      Object.keys(selects).forEach(function (key) {
+        var value = document.getElementById(selects[key]).value;
+        if (value && card.dataset[key] !== value) ok = false;
+      });
+      card.hidden = !ok;
+      if (ok) count++;
+    });
+    shown.textContent = count + {{ t('report.findings.of') | tojson }} + cards.length;
+  }
+  q.addEventListener("input", apply);
+  Object.keys(selects).forEach(function (key) {
+    document.getElementById(selects[key]).addEventListener("change", apply);
+  });
+  apply();
+})();
+</script>
+</body>
+</html>

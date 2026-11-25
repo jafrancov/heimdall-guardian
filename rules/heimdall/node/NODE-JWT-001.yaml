@@ -1,0 +1,36 @@
+rules:
+  - id: NODE-JWT-001
+    languages: [javascript, typescript]
+    severity: ERROR
+    message: >-
+      Weakened JWT verification or issuance: the none algorithm (no
+      signature) is accepted or the token expiration is ignored.
+    metadata:
+      cwe: "CWE-347"
+      owasp: "A07:2025 Authentication Failures"
+      severity_hdl: high
+      confidence: high
+      title_es: "JWT con algoritmo none o sin validar la expiración (Node.js)"
+      title: "JWT with the none algorithm or without expiration validation (Node.js)"
+      recommendation_es: >-
+        Fijar una lista cerrada de algoritmos firmados (por ejemplo algorithms:
+        ['HS256'] o ['RS256']), nunca incluir none, y no usar ignoreExpiration:
+        true. Si se necesita renovar un token vencido, hacerlo con un token de
+        refresco.
+      recommendation: >-
+        Set a closed list of signing algorithms (for example algorithms:
+        ['HS256'] or ['RS256']), never include none, and do not use
+        ignoreExpiration: true. If an expired token must be renewed, do it
+        with a refresh token.
+      message_es: >-
+        Verificación o emisión de tokens JWT debilitada: se acepta el algoritmo
+        none (sin firma) o se ignora la expiración del token.
+    pattern-either:
+      - pattern: |
+          {..., algorithms: [..., "none", ...], ...}
+      - pattern: |
+          {..., algorithms: [..., "None", ...], ...}
+      - pattern: |
+          {..., algorithm: "none", ...}
+      - pattern: |
+          {..., ignoreExpiration: true, ...}

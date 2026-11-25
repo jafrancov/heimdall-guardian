@@ -1,0 +1,43 @@
+name: False positive
+description: A rule flagged code that is not a problem.
+labels: [false-positive, rules]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        False positives help us tune the rules. Reduce the code to the smallest snippet that
+        still triggers the finding, and remove anything private. Never paste real secrets.
+  - type: input
+    id: rule
+    attributes:
+      label: Rule ID
+      description: For example `DJ-SQL-001`. It is shown in the finding detail.
+      placeholder: DJ-SQL-001
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Heimdall Guardian version
+    validations:
+      required: true
+  - type: textarea
+    id: snippet
+    attributes:
+      label: Minimal snippet
+      description: The smallest code that still triggers the finding.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why it is a false positive
+      description: What makes this code safe (validation, framework protection, constant input...).
+    validations:
+      required: true
+  - type: textarea
+    id: fix
+    attributes:
+      label: Suggestion
+      description: Optional. How the rule could tell this case apart from a real one.

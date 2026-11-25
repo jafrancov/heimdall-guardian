@@ -1,0 +1,77 @@
+rules:
+  - id: SWIFT-CRY-001
+    languages: [swift]
+    severity: WARNING
+    message: >-
+      Weak cryptography: MD5 or SHA-1 applied to passwords, ECB mode
+      encryption, a fixed initialization vector (IV), or a predictable
+      random generator for tokens, codes or passwords. Passwords can be
+      brute-forced, ECB reveals patterns in the ciphertext, and a repeated
+      IV defeats the protection of CBC or GCM mode.
+    metadata:
+      cwe: "CWE-327"
+      owasp: "A04:2025 Cryptographic Failures"
+      severity_hdl: medium
+      confidence: medium
+      title_es: "Criptografía débil o vector de inicialización fijo (Swift/iOS)"
+      title: "Weak cryptography or fixed initialization vector (Swift/iOS)"
+      recommendation_es: >-
+        Para contraseñas, usar un algoritmo lento con sal (Argon2, bcrypt o
+        PBKDF2 con CCKeyDerivationPBKDF) y, de preferencia, verificarlas en el
+        servidor. Para cifrar, AES.GCM de CryptoKit, que genera un nonce
+        aleatorio nuevo por mensaje; nunca ECB ni IV literales. Para tokens y
+        códigos, SecRandomCopyBytes o SystemRandomNumberGenerator, no rand() ni
+        random().
+      recommendation: >-
+        For passwords, use a slow salted algorithm (Argon2, bcrypt or PBKDF2
+        with CCKeyDerivationPBKDF) and, preferably, verify them on the server.
+        For encryption, use CryptoKit's AES.GCM, which generates a new random
+        nonce per message; never ECB or literal IVs. For tokens and codes, use
+        SecRandomCopyBytes or SystemRandomNumberGenerator, not rand() or
+        random().
+      message_es: >-
+        Criptografía débil: MD5 o SHA-1 aplicados a contraseñas, cifrado en modo
+        ECB, vector de inicialización (IV) fijo o un generador aleatorio
+        predecible para tokens, códigos o contraseñas. Las contraseñas se
+        descifran por fuerza bruta, ECB delata patrones del texto cifrado y un IV
+        repetido anula la protección del modo CBC o GCM.
+    patterns:
+      - pattern-either:
+          - patterns:
+              - pattern-either:
+                  - pattern: |
+                      Insecure.MD5.hash(data: $X)
+                  - pattern: |
+                      Insecure.SHA1.hash(data: $X)
+                  - pattern: Insecure.MD5.hash($X)
+                  - pattern: Insecure.SHA1.hash($X)
+              - metavariable-regex:
+                  metavariable: $X
+                  regex: (?i)^.*(passw|pwd|contrase|clave).*$
+          - patterns:
+              - pattern-either:
+                  - pattern: CC_MD5(...)
+                  - pattern: CC_SHA1(...)
+              - pattern-inside: |
+                  func $F(...) { ... }
+              - metavariable-regex:
+                  metavariable: $F
+                  regex: (?i)^.*(passw|pwd|contrase|credential|login|auth).*$
+          - pattern: kCCOptionECBMode
+          - pattern: ECB()
+          - patterns:
+              - pattern: |
+                  CBC(iv: $IV)
+              - metavariable-regex:
+                  metavariable: $IV
+                  regex: ^(\[|"|Array\(\s*"|Data\(\s*"|[A-Za-z_.]*\(\s*")
+          - patterns:
+              - pattern-either:
+                  - pattern: rand()
+                  - pattern: random()
+                  - pattern: drand48()
+              - pattern-inside: |
+                  func $F(...) { ... }
+              - metavariable-regex:
+                  metavariable: $F
+                  regex: (?i)^.*(token|passw|pwd|secret|otp|nonce|salt|apikey|codigo|session|sesion).*$

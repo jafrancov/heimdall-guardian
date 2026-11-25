@@ -1,0 +1,29 @@
+rules:
+  - id: DJ-XSS-001
+    languages: [python]
+    severity: WARNING
+    message: >-
+      mark_safe() on a variable value turns off HTML escaping. If the value
+      contains user data, it allows script injection (XSS).
+    metadata:
+      cwe: "CWE-79"
+      owasp: "A05:2025 Injection"
+      severity_hdl: medium
+      confidence: medium
+      message_es: >-
+        mark_safe() sobre un valor variable desactiva el escapado de HTML. Si el
+        valor contiene datos del usuario, permite inyectar scripts (XSS).
+      title: "Unescaped HTML: mark_safe with variable data"
+      recommendation: >-
+        Use format_html(), which escapes each argument, or let the template escape
+        the value.
+      title_es: "HTML sin escapar: mark_safe con datos variables"
+      recommendation_es: >-
+        Usar format_html(), que escapa cada argumento, o dejar que la
+        plantilla escape el valor.
+    patterns:
+      - pattern-either:
+          - pattern: mark_safe($X)
+          - pattern: $M.mark_safe($X)
+      - pattern-not: mark_safe("...")
+      - pattern-not: $M.mark_safe("...")

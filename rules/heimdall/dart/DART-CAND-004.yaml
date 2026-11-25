@@ -1,0 +1,28 @@
+rules:
+  - id: DART-CAND-004
+    languages: [regex]
+    severity: INFO
+    message: >-
+      An HTTP request goes to a URL that is not a constant. It is only a point to review: the local AI checks whether untrusted input reaches it.
+    metadata:
+      candidate_kind: ssrf
+      cwe: "CWE-918"
+      owasp: "A01:2025 Broken Access Control"
+      severity_hdl: medium
+      confidence: low
+      message_es: >-
+        Se hace una petición HTTP a una URL que no es constante. Es solo un punto por revisar: la IA local comprueba si le llega entrada no confiable.
+      title: "Request to a URL from a variable (to review)"
+      recommendation: >-
+        Validate the host against an allow list and block private and internal addresses.
+      title_es: "Petición a una URL desde una variable (por revisar)"
+      recommendation_es: >-
+        Valida el host contra una lista permitida y bloquea las direcciones privadas e internas.
+    paths:
+      include:
+        - "*.dart"
+    pattern-either:
+      - pattern-regex: >-
+          (?m)^(?![ \t]*//)[^\n]*?\bUri\.parse\(\s*(?!r?(?:"[^"$\\\n]*"|\x27[^\x27$\\\n]*\x27)\s*[,)])[^\s)]
+      - pattern-regex: >-
+          (?m)^(?![ \t]*//)[^\n]*?\.loadRequest\(\s*(?!Uri\.)(?!r?(?:"[^"$\\\n]*"|\x27[^\x27$\\\n]*\x27)\s*[,)])[^\s)]

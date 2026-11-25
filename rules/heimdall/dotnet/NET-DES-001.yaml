@@ -1,0 +1,29 @@
+rules:
+  - id: NET-DES-001
+    languages: [csharp]
+    severity: ERROR
+    message: >-
+      Insecure deserializer. BinaryFormatter, NetDataContractSerializer and
+      TypeNameHandling.All allow arbitrary types to be instantiated and can lead
+      to remote code execution when processing untrusted data.
+    metadata:
+      cwe: "CWE-502"
+      owasp: "A08:2025 Software or Data Integrity Failures"
+      severity_hdl: high
+      confidence: high
+      message_es: >-
+        Deserializador inseguro. BinaryFormatter, NetDataContractSerializer y
+        TypeNameHandling.All permiten instanciar tipos arbitrarios y pueden
+        derivar en ejecución remota de código al procesar datos no confiables.
+      title: "Insecure deserialization (.NET)"
+      recommendation: >-
+        Replace with System.Text.Json or with DataContractSerializer using known
+        types. In Json.NET, use TypeNameHandling.None.
+      title_es: "Deserialización insegura (.NET)"
+      recommendation_es: >-
+        Sustituir por System.Text.Json o por DataContractSerializer con tipos
+        conocidos. En Json.NET, usar TypeNameHandling.None.
+    pattern-either:
+      - pattern: new BinaryFormatter(...)
+      - pattern: new NetDataContractSerializer(...)
+      - pattern: TypeNameHandling.All

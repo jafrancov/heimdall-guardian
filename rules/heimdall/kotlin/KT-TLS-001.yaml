@@ -1,0 +1,51 @@
+rules:
+  - id: KT-TLS-001
+    languages: [regex]
+    severity: ERROR
+    message: >-
+      Secure connection validation is disabled: a TrustManager that accepts
+      any certificate, a HostnameVerifier that always returns true,
+      ALLOW_ALL_HOSTNAME_VERIFIER, or a WebView that continues after a
+      certificate error (handler.proceed()). Anyone on the same network can
+      intercept and modify the traffic with a fake certificate.
+    metadata:
+      cwe: "CWE-295"
+      owasp: "A04:2025 Cryptographic Failures"
+      severity_hdl: high
+      confidence: high
+      title_es: "Validación de certificados TLS desactivada (Kotlin/Android)"
+      title: "TLS certificate validation disabled (Kotlin/Android)"
+      recommendation_es: >-
+        Quitar el TrustManager y el HostnameVerifier personalizados y usar los
+        del sistema. Si el servidor usa una autoridad propia, declararla en
+        network_security_config.xml o fijar el certificado con
+        CertificatePinner de OkHttp. En onReceivedSslError, llamar a
+        handler.cancel() y mostrar el error al usuario.
+      recommendation: >-
+        Remove the custom TrustManager and HostnameVerifier and use the system
+        ones. If the server uses its own authority, declare it in
+        network_security_config.xml or pin the certificate with OkHttp's
+        CertificatePinner. In onReceivedSslError, call handler.cancel() and
+        show the error to the user.
+      message_es: >-
+        Se desactiva la validación de la conexión segura: un TrustManager que
+        acepta cualquier certificado, un HostnameVerifier que siempre responde
+        true, ALLOW_ALL_HOSTNAME_VERIFIER o un WebView que continúa tras un
+        error de certificado (handler.proceed()). Cualquiera en la misma red
+        puede interceptar y modificar el tráfico con un certificado falso.
+    paths:
+      include:
+        - "*.kt"
+    pattern-either:
+      - pattern-regex: >-
+          (?m)^(?![ \t]*//)[^\n]*?fun checkServerTrusted\([^)]*\)\s*(?::\s*Unit\s*)?(?:=\s*Unit\b|\{\s*(?://[^\n]*\s*)*\})
+      - pattern-regex: >-
+          (?m)^(?![ \t]*//)[^\n]*?\bHostnameVerifier\s*\{\s*_\s*,\s*_\s*->\s*true\s*\}
+      - pattern-regex: >-
+          (?m)^(?![ \t]*//)[^\n]*?\bhostnameVerifier\s*\{\s*_\s*,\s*_\s*->\s*true\s*\}
+      - pattern-regex: >-
+          (?m)^(?![ \t]*//)[^\n]*?\bALLOW_ALL_HOSTNAME_VERIFIER\b
+      - pattern-regex: >-
+          (?m)^(?![ \t]*//)[^\n]*?override fun verify\([^)]*\)\s*(?::\s*Boolean)?\s*(?:=\s*true\b|\{\s*return\s+true\s*\})
+      - pattern-regex: >-
+          fun onReceivedSslError\([^)]*\)[^{]*\{[^}]*?\.proceed\(\)

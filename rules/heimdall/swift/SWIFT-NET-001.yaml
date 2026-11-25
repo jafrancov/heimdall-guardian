@@ -1,0 +1,35 @@
+rules:
+  - id: SWIFT-NET-001
+    languages: [regex]
+    severity: WARNING
+    message: >-
+      Unencrypted http:// address: the application's traffic travels in
+      cleartext and anyone on the same network can read or modify it. iOS
+      blocks this traffic by default (App Transport Security), so it usually
+      also forces an exception to be opened in Info.plist.
+    metadata:
+      cwe: "CWE-319"
+      owasp: "A04:2025 Cryptographic Failures"
+      severity_hdl: medium
+      confidence: medium
+      title_es: "Dirección http:// sin cifrar en el código (Swift/iOS)"
+      title: "Unencrypted http:// address in the code (Swift/iOS)"
+      recommendation_es: >-
+        Usar https:// en todas las direcciones de servicios. Para desarrollo
+        local, localhost y 127.0.0.1 están permitidos; si un entorno de pruebas
+        no tiene certificado, resolverlo ahí en lugar de aceptar http en la
+        versión publicada.
+      recommendation: >-
+        Use https:// for all service addresses. For local development,
+        localhost and 127.0.0.1 are allowed; if a test environment has no
+        certificate, fix it there instead of accepting http in the released
+        version.
+      message_es: >-
+        Dirección http:// sin cifrar: el tráfico de la aplicación viaja en texto
+        claro y cualquiera en la misma red puede leerlo o modificarlo. iOS
+        bloquea este tráfico por defecto (App Transport Security), así que además
+        suele obligar a abrir una excepción en Info.plist.
+    paths:
+      include:
+        - "*.swift"
+    pattern-regex: (?m)^(?![ \t]*//)[^\n]*?(?i)"http://(?!(?:localhost|127\.0\.0\.1|10\.0\.2\.2|0\.0\.0\.0|\[::1\]|www\.w3\.org|schemas\.|www\.apple\.com/DTDs|ns\.adobe\.com|purl\.org|xmlns))[^"\s]+"?

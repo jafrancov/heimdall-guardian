@@ -1,0 +1,34 @@
+rules:
+  - id: SWIFT-CAND-002
+    languages: [regex]
+    severity: INFO
+    message: >-
+      A file is opened with a path that is not a constant. It is only a point to review: the local AI checks whether untrusted input reaches it.
+    metadata:
+      candidate_kind: path
+      cwe: "CWE-22"
+      owasp: "A01:2025 Broken Access Control"
+      severity_hdl: medium
+      confidence: low
+      message_es: >-
+        Se abre un archivo con una ruta que no es constante. Es solo un punto por revisar: la IA local comprueba si le llega entrada no confiable.
+      title: "File path from a variable (to review)"
+      recommendation: >-
+        Resolve the path against a fixed base folder and reject any result that falls outside it.
+      title_es: "Ruta de archivo desde una variable (por revisar)"
+      recommendation_es: >-
+        Resuelve la ruta contra una carpeta base fija y rechaza cualquier resultado que quede fuera de ella.
+    paths:
+      include:
+        - "*.swift"
+    pattern-either:
+      - pattern-regex: >-
+          (?m)^(?![ \t]*//)[^\n]*?\.contents\(atPath:\s*(?!"(?:[^"\\\n]|\\[^(\n])*"\s*[,)])\S
+      - pattern-regex: >-
+          (?m)^(?![ \t]*//)[^\n]*?\bURL\(fileURLWithPath:\s*(?!"(?:[^"\\\n]|\\[^(\n])*"\s*[,)])\S
+      - pattern-regex: >-
+          (?m)^(?![ \t]*//)[^\n]*?\.removeItem\(atPath:\s*(?!"(?:[^"\\\n]|\\[^(\n])*"\s*[,)])\S
+      - pattern-regex: >-
+          (?m)^(?![ \t]*//)[^\n]*?\bString\(contentsOfFile:\s*(?!"(?:[^"\\\n]|\\[^(\n])*"\s*[,)])\S
+      - pattern-regex: >-
+          (?m)^(?![ \t]*//)[^\n]*?\bData\(contentsOf:\s*(?!"(?:[^"\\\n]|\\[^(\n])*"\s*[,)])\S

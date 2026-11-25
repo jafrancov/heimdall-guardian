@@ -1,0 +1,27 @@
+rules:
+  - id: DJ-CONF-004
+    languages: [python]
+    severity: WARNING
+    message: >-
+      Session or CSRF cookies without the Secure flag, or HTTPS redirection turned
+      off: session credentials can travel in clear text.
+    metadata:
+      cwe: "CWE-614"
+      owasp: "A02:2025 Security Misconfiguration"
+      severity_hdl: medium
+      confidence: medium
+      message_es: >-
+        Cookies de sesión o CSRF sin la marca Secure, o redirección a HTTPS
+        desactivada: las credenciales de sesión pueden viajar en claro.
+      title: "Insecure cookies or transport in settings"
+      recommendation: >-
+        In production: SESSION_COOKIE_SECURE = True, CSRF_COOKIE_SECURE = True and
+        SECURE_SSL_REDIRECT = True, plus SECURE_HSTS_SECONDS.
+      title_es: "Cookies o transporte inseguros en settings"
+      recommendation_es: >-
+        En producción: SESSION_COOKIE_SECURE = True, CSRF_COOKIE_SECURE = True
+        y SECURE_SSL_REDIRECT = True, además de SECURE_HSTS_SECONDS.
+    pattern-either:
+      - pattern: SESSION_COOKIE_SECURE = False
+      - pattern: CSRF_COOKIE_SECURE = False
+      - pattern: SECURE_SSL_REDIRECT = False

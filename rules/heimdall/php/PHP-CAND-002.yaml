@@ -1,0 +1,35 @@
+rules:
+  - id: PHP-CAND-002
+    languages: [php]
+    severity: INFO
+    message: >-
+      A system command is run with a value that is not a constant. It is only a point to review: the local AI checks whether untrusted input reaches it.
+    metadata:
+      candidate_kind: exec
+      cwe: "CWE-78"
+      owasp: "A05:2025 Injection"
+      severity_hdl: medium
+      confidence: low
+      message_es: >-
+        Se ejecuta un comando del sistema con un valor que no es constante. Es solo un punto por revisar: la IA local comprueba si le llega entrada no confiable.
+      title: "Command built from a variable (to review)"
+      recommendation: >-
+        Avoid the shell; pass the program and its arguments as a list and validate every value against an allow list.
+      title_es: "Comando armado con una variable (por revisar)"
+      recommendation_es: >-
+        Evita el shell; pasa el programa y sus argumentos como lista y valida cada valor contra una lista permitida.
+    patterns:
+      - pattern-either:
+          - pattern: exec($X, ...)
+          - pattern: shell_exec($X)
+          - pattern: system($X, ...)
+          - pattern: passthru($X, ...)
+          - pattern: proc_open($X, ...)
+          - pattern: popen($X, ...)
+          - pattern: "`...`"
+      - pattern-not: exec("...", ...)
+      - pattern-not: shell_exec("...")
+      - pattern-not: system("...", ...)
+      - pattern-not: passthru("...", ...)
+      - pattern-not: proc_open("...", ...)
+      - pattern-not: popen("...", ...)

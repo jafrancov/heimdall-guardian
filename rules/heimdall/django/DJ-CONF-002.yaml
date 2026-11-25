@@ -1,0 +1,28 @@
+rules:
+  - id: DJ-CONF-002
+    languages: [python]
+    severity: ERROR
+    message: >-
+      SECRET_KEY written as a literal in the code. Anyone with access to the
+      repository can forge sessions, password reset tokens and signed data.
+    metadata:
+      cwe: "CWE-798"
+      owasp: "A07:2025 Authentication Failures"
+      severity_hdl: critical
+      confidence: high
+      message_es: >-
+        SECRET_KEY escrita como literal en el código. Quien tenga acceso al
+        repositorio puede falsificar sesiones, tokens de restablecimiento de
+        contraseña y datos firmados.
+      title: "Literal SECRET_KEY in the code"
+      recommendation: >-
+        Generate a new key, load it from an environment variable or a secrets
+        manager, and treat the one left in the repository as compromised.
+      title_es: "SECRET_KEY literal en el código"
+      recommendation_es: >-
+        Generar una llave nueva, cargarla desde una variable de entorno o un
+        gestor de secretos y dar por comprometida la que quedó en el
+        repositorio.
+    patterns:
+      - pattern: SECRET_KEY = "..."
+      - pattern-not: SECRET_KEY = ""

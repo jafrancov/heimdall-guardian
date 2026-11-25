@@ -1,0 +1,29 @@
+rules:
+  - id: NET-CONF-001
+    languages: [regex]
+    severity: ERROR
+    message: >-
+      Connection string with the password written in a versioned configuration
+      file. Anyone with access to the repository has access to the database.
+    metadata:
+      cwe: "CWE-798"
+      owasp: "A07:2025 Authentication Failures"
+      severity_hdl: critical
+      confidence: high
+      message_es: >-
+        Cadena de conexión con la contraseña escrita en un archivo de
+        configuración versionado. Quien tenga acceso al repositorio tiene
+        acceso a la base de datos.
+      title: "Password in connection string (.NET)"
+      recommendation: >-
+        Change the password and take it out of the file: environment variables, User
+        Secrets in development or a secrets manager in production.
+      title_es: "Contraseña en cadena de conexión (.NET)"
+      recommendation_es: >-
+        Cambiar la contraseña y sacarla del archivo: variables de entorno,
+        User Secrets en desarrollo o un gestor de secretos en producción.
+    paths:
+      include:
+        - "appsettings*.json"
+        - "*.config"
+    pattern-regex: (?i)\b(password|pwd)\s*=\s*[^;"'<>\s{}]+

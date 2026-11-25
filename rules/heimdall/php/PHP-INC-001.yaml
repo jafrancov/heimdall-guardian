@@ -1,0 +1,65 @@
+rules:
+  - id: PHP-INC-001
+    languages: [php]
+    severity: ERROR
+    message: >-
+      include/require with a path that depends on a variable. If the value comes
+      from the user, it allows including arbitrary files and running code.
+    metadata:
+      cwe: "CWE-98"
+      owasp: "A05:2025 Injection"
+      severity_hdl: high
+      confidence: medium
+      message_es: >-
+        include/require con una ruta que depende de una variable. Si el valor
+        proviene del usuario, permite incluir archivos arbitrarios y ejecutar
+        código.
+      title: "File inclusion with a variable path (PHP)"
+      recommendation: >-
+        Include fixed paths only. If the page depends on a parameter, resolve it
+        against an allowlist of permitted files.
+      title_es: "Inclusión de archivo con ruta variable (PHP)"
+      recommendation_es: >-
+        Incluir solo rutas fijas. Si la página depende de un parámetro,
+        resolverlo contra una lista blanca de archivos permitidos.
+    patterns:
+      - pattern-either:
+          - pattern: include $PATH;
+          - pattern: include_once $PATH;
+          - pattern: require $PATH;
+          - pattern: require_once $PATH;
+      - metavariable-regex:
+          metavariable: $PATH
+          regex: (?s).*\$[A-Za-z_].*
+      # A variable assigned in the same scope from a fixed base (dirname(__FILE__),
+      # __DIR__, a constant or a string literal, with any nesting of dirname() and
+      # realpath() around __FILE__/__DIR__, joined with literals) and concatenated only with literals is a fixed path.
+      - pattern-not:
+          patterns:
+            - pattern-inside: |
+                $V = $SAFE;
+                ...
+            - pattern-either:
+                - pattern: include $V;
+                - pattern: include_once $V;
+                - pattern: require $V;
+                - pattern: require_once $V;
+            - metavariable-regex:
+                metavariable: $SAFE
+                regex: (?s)^\s*(?:realpath\(\s*)?(?:(?:(?:dirname|realpath)\(\s*)*(?:__FILE__|__DIR__)(?:\s*(?:,\s*[0-9]+\s*)?\))*|[A-Z][A-Z0-9_]*|'[^'$]*'|"[^"$]*")(?:\s*\.\s*(?:(?:(?:dirname|realpath)\(\s*)*(?:__FILE__|__DIR__)(?:\s*(?:,\s*[0-9]+\s*)?\))*|[A-Z][A-Z0-9_]*|'[^'$]*'|"[^"$]*"))*\s*\)?\s*$
+      - pattern-not:
+          patterns:
+            - pattern-inside: |
+                $V = $SAFE;
+                ...
+            - pattern-either:
+                - pattern: include $V . $LIT;
+                - pattern: include_once $V . $LIT;
+                - pattern: require $V . $LIT;
+                - pattern: require_once $V . $LIT;
+            - metavariable-regex:
+                metavariable: $SAFE
+                regex: (?s)^\s*(?:realpath\(\s*)?(?:(?:(?:dirname|realpath)\(\s*)*(?:__FILE__|__DIR__)(?:\s*(?:,\s*[0-9]+\s*)?\))*|[A-Z][A-Z0-9_]*|'[^'$]*'|"[^"$]*")(?:\s*\.\s*(?:(?:(?:dirname|realpath)\(\s*)*(?:__FILE__|__DIR__)(?:\s*(?:,\s*[0-9]+\s*)?\))*|[A-Z][A-Z0-9_]*|'[^'$]*'|"[^"$]*"))*\s*\)?\s*$
+            - metavariable-regex:
+                metavariable: $LIT
+                regex: (?s)^\s*('[^'$]*'|"[^"$]*")(\s*\.\s*('[^'$]*'|"[^"$]*"))*\s*$

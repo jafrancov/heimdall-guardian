@@ -1,0 +1,44 @@
+rules:
+  - id: KT-SQL-001
+    languages: [regex]
+    severity: ERROR
+    message: >-
+      SQL injection: the SQLite or Room query is built with a string
+      template ($value, ${value}) or concatenation instead of bound
+      arguments. A value such as `' OR 1=1 --` alters the query and can read
+      or delete the application's local database; if the query is exposed
+      through a ContentProvider, it can also affect other applications.
+    metadata:
+      cwe: "CWE-89"
+      owasp: "A05:2025 Injection"
+      severity_hdl: high
+      confidence: medium
+      title_es: "Consulta SQL construida con texto (SQLite o Room, Kotlin/Android)"
+      title: "SQL query built from text (SQLite or Room, Kotlin/Android)"
+      recommendation_es: >-
+        Usar marcadores ? con la lista de argumentos
+        (db.rawQuery("... WHERE id = ?", arrayOf(id)), o
+        SimpleSQLiteQuery("... ?", arrayOf(id)) en Room) o, mejor, consultas
+        @Query con parámetros :nombre. Nunca interpolar ni concatenar valores
+        en el SQL; los nombres de tabla o columna variables se validan contra
+        una lista fija.
+      recommendation: >-
+        Use ? placeholders with the argument list (db.rawQuery("... WHERE id =
+        ?", arrayOf(id)), or SimpleSQLiteQuery("... ?", arrayOf(id)) in Room)
+        or, better, @Query queries with :name parameters. Never interpolate or
+        concatenate values into the SQL; variable table or column names must
+        be validated against a fixed list.
+      message_es: >-
+        Inyección SQL: la consulta de SQLite o de Room se arma con una plantilla
+        de texto ($valor, ${valor}) o con concatenación en lugar de argumentos
+        enlazados. Un valor como `' OR 1=1 --` altera la consulta y puede leer
+        o borrar la base local de la aplicación; si la consulta está expuesta
+        por un ContentProvider, también la de otras aplicaciones.
+    paths:
+      include:
+        - "*.kt"
+    pattern-either:
+      - pattern-regex: >-
+          (?m)^(?![ \t]*//)[^\n]*?\b(?:rawQuery|rawQueryWithFactory|execSQL|compileStatement|SimpleSQLiteQuery)\(\s*(?:"(?:[^"\\\n]|\\[^$\n])*?(?<!\\)\$[\w{]|"[^"\n]*"\s*\+\s*[A-Za-z_(])
+      - pattern-regex: >-
+          (?m)\b(?:rawQuery|execSQL|compileStatement|SimpleSQLiteQuery)\(\s*"""(?s:(?!""").)*?(?<!\\)\$[\w{]

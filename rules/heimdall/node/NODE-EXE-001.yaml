@@ -1,0 +1,141 @@
+rules:
+  - id: NODE-EXE-001
+    languages: [javascript, typescript]
+    severity: ERROR
+    mode: taint
+    message: >-
+      Request data reaches a system command (child_process.exec, execSync,
+      spawn or execFile with a shell, shelljs.exec): this allows arbitrary
+      command execution on the server.
+    metadata:
+      cwe: "CWE-78"
+      owasp: "A05:2025 Injection"
+      severity_hdl: critical
+      confidence: high
+      title_es: "Inyección de comandos con datos de la petición (Node.js)"
+      title: "Command injection with request data (Node.js)"
+      recommendation_es: >-
+        Evitar el intérprete de comandos: usar execFile o spawn sin shell:true y
+        pasar los argumentos como arreglo, validados contra una lista blanca. Si
+        es inevitable construir un comando, escapar cada argumento con shell-
+        quote.
+      recommendation: >-
+        Avoid the command shell: use execFile or spawn without shell:true and
+        pass the arguments as an array, validated against an allowlist. If
+        building a command is unavoidable, escape each argument with
+        shell-quote.
+      message_es: >-
+        Datos de la petición llegan a un comando del sistema
+        (child_process.exec, execSync, spawn o execFile con shell,
+        shelljs.exec): permite ejecutar comandos arbitrarios en el servidor.
+    pattern-sources:
+      - pattern: req.query
+      - pattern: req.body
+      - pattern: req.params
+      - pattern: req.headers
+      - pattern: req.cookies
+      - pattern: req.signedCookies
+      - pattern: req.get(...)
+      - pattern: req.header(...)
+      - pattern: request.query
+      - pattern: request.body
+      - pattern: request.params
+      - pattern: request.headers
+      - pattern: request.cookies
+      - pattern: ctx.query
+      - pattern: ctx.params
+      - pattern: ctx.request.body
+      - pattern: ctx.request.query
+      - patterns:
+          - pattern: |
+              class $C { $M(..., @$DEC(...) $X, ...) {...} }
+          - metavariable-regex:
+              metavariable: $DEC
+              regex: ^(Query|Body|Param|Headers|Cookies)$
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., ParseIntPipe, ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., new ParseIntPipe(...), ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., ParseFloatPipe, ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., new ParseFloatPipe(...), ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., ParseBoolPipe, ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., new ParseBoolPipe(...), ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., ParseUUIDPipe, ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., new ParseUUIDPipe(...), ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., ParseEnumPipe(...), ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., new ParseEnumPipe(...), ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., ParseDatePipe, ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., new ParseDatePipe(...), ...) $X, ...) {...} }
+          - focus-metavariable: $X
+    pattern-sanitizers:
+      - pattern: parseInt(...)
+      - pattern: parseFloat(...)
+      - pattern: Number(...)
+      - pattern: Number.parseInt(...)
+      - pattern: Math.floor(...)
+      - pattern: shellescape(...)
+      - pattern: shellEscape(...)
+      - pattern: escapeShellArg(...)
+      - pattern: quote(...)
+      - pattern: $SQ.quote(...)
+      - pattern: shlex.quote(...)
+    pattern-sinks:
+      - patterns:
+          - pattern: $F($Q, ...)
+          - metavariable-regex:
+              metavariable: $F
+              regex: ^(exec|execSync|execAsync|execPromise)$
+          - focus-metavariable: $Q
+      - patterns:
+          - pattern: $CP.$F($Q, ...)
+          - metavariable-regex:
+              metavariable: $CP
+              regex: (?i)^(child_?process|cp|shell|shelljs|sh|cmd)$
+          - metavariable-regex:
+              metavariable: $F
+              regex: ^(exec|execSync)$
+          - focus-metavariable: $Q
+      - patterns:
+          - pattern-either:
+              - pattern: |
+                  $F($Q, $ARGS, {..., shell: true, ...})
+              - pattern: |
+                  $F($Q, {..., shell: true, ...})
+              - pattern: |
+                  $CP.$F($Q, $ARGS, {..., shell: true, ...})
+              - pattern: |
+                  $CP.$F($Q, {..., shell: true, ...})
+          - metavariable-regex:
+              metavariable: $F
+              regex: ^(spawn|spawnSync|execFile|execFileSync)$
+          - focus-metavariable: $Q
+      - patterns:
+          - pattern-either:
+              - pattern: |
+                  $F($SH, $ARGS, {..., shell: true, ...})
+              - pattern: |
+                  $CP.$F($SH, $ARGS, {..., shell: true, ...})
+          - metavariable-regex:
+              metavariable: $F
+              regex: ^(spawn|spawnSync|execFile|execFileSync)$
+          - focus-metavariable: $ARGS
+      - patterns:
+          - pattern-either:
+              - pattern: $F($SH, ["-c", $Q, ...], ...)
+              - pattern: $CP.$F($SH, ["-c", $Q, ...], ...)
+              - pattern: $F($SH, ["/c", $Q, ...], ...)
+              - pattern: $CP.$F($SH, ["/c", $Q, ...], ...)
+          - metavariable-regex:
+              metavariable: $F
+              regex: ^(spawn|spawnSync|execFile|execFileSync)$
+          - focus-metavariable: $Q

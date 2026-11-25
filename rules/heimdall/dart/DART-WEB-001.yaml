@@ -1,0 +1,36 @@
+rules:
+  - id: DART-WEB-001
+    languages: [dart]
+    severity: ERROR
+    message: >-
+      Bridge between JavaScript and the application: the page loaded by the
+      WebView can call native Dart code through a channel or handler. If the
+      page belongs to a third party, is loaded over http, or has foreign
+      content injected into it, a malicious script gains access to
+      application functions.
+    metadata:
+      cwe: "CWE-749"
+      owasp: "A06:2025 Insecure Design"
+      severity_hdl: high
+      confidence: medium
+      title_es: "WebView con puente de JavaScript hacia la aplicación (Dart/Flutter)"
+      title: "WebView with a JavaScript bridge to the application (Dart/Flutter)"
+      recommendation_es: >-
+        Cargar solo páginas propias por https y validar el origen antes de
+        responder a un mensaje (por ejemplo con NavigationDelegate). Exponer el
+        mínimo de funciones, validar y tratar como no confiable cada mensaje
+        que llegue del canal, y no devolverle datos de sesión.
+      recommendation: >-
+        Load only your own pages over https and validate the origin before
+        answering a message (for example with NavigationDelegate). Expose the
+        minimum of functions, validate and treat as untrusted every message
+        that arrives from the channel, and do not return session data to it.
+      message_es: >-
+        Puente entre JavaScript y la aplicación: la página que carga el WebView
+        puede llamar código nativo de Dart mediante un canal o manejador. Si la
+        página es de terceros, si se carga por http o si se le inyecta contenido
+        ajeno, un script malicioso obtiene acceso a funciones de la aplicación.
+    pattern-either:
+      - pattern: $W.addJavaScriptChannel(...)
+      - pattern: $W.addJavaScriptHandler(...)
+      - pattern: JavascriptChannel(...)

@@ -1,0 +1,57 @@
+rules:
+  - id: NODE-JWT-002
+    languages: [javascript, typescript]
+    severity: WARNING
+    message: >-
+      The secret used to sign or verify JWT tokens is written in the code.
+      Anyone who can read the repository can issue valid tokens.
+    metadata:
+      cwe: "CWE-798"
+      owasp: "A07:2025 Authentication Failures"
+      severity_hdl: medium
+      confidence: high
+      title_es: "Secreto JWT escrito en el código (Node.js)"
+      title: "Hard-coded JWT secret (Node.js)"
+      recommendation_es: >-
+        Leer el secreto de una variable de entorno o de un gestor de secretos
+        (process.env.JWT_SECRET), usar un valor largo y aleatorio, y rotar el
+        que ya estuvo en el repositorio. Para firmar con clave asimétrica,
+        cargar la clave privada desde un archivo fuera del código.
+      recommendation: >-
+        Read the secret from an environment variable or a secrets manager
+        (process.env.JWT_SECRET), use a long random value, and rotate any that
+        has been in the repository. To sign with an asymmetric key, load the
+        private key from a file outside the code.
+      message_es: >-
+        El secreto con que se firman o verifican los tokens JWT está escrito en
+        el código. Quien lea el repositorio puede emitir tokens válidos.
+    patterns:
+      - pattern-either:
+          - patterns:
+              - pattern-either:
+                  - pattern: $J.sign($P, "...", ...)
+                  - pattern: $J.verify($T, "...", ...)
+              - metavariable-regex:
+                  metavariable: $J
+                  regex: ^(?:.*\.)?(jwt|jsonwebtoken|jsonWebToken|jwtService|jwtSvc)$
+          - patterns:
+              - pattern-either:
+                  - pattern: |
+                      $J.signAsync($P, {..., secret: "...", ...})
+                  - pattern: |
+                      $J.verifyAsync($T, {..., secret: "...", ...})
+                  - pattern: |
+                      $J.sign($P, {..., secret: "...", ...})
+                  - pattern: |
+                      $J.verify($T, {..., secret: "...", ...})
+              - metavariable-regex:
+                  metavariable: $J
+                  regex: ^(?:.*\.)?(jwt|jsonwebtoken|jsonWebToken|jwtService|jwtSvc)$
+          - pattern: |
+              JwtModule.register({..., secret: "...", ...})
+          - pattern: |
+              {..., secretOrKey: "...", ...}
+          - pattern: |
+              expressjwt({..., secret: "...", ...})
+          - pattern: |
+              jwt({..., secret: "...", ...})

@@ -1,0 +1,51 @@
+rules:
+  - id: DJ-AUTH-002
+    languages: [python]
+    severity: ERROR
+    message: >-
+      Class-based view without LoginRequiredMixin or PermissionRequiredMixin. If
+      it is published in urls.py, it is reachable without logging in.
+    metadata:
+      cwe: "CWE-306"
+      owasp: "A01:2025 Broken Access Control"
+      severity_hdl: high
+      confidence: low
+      message_es: >-
+        Vista basada en clase sin LoginRequiredMixin ni PermissionRequiredMixin.
+        Si está publicada en urls.py, es accesible sin iniciar sesión.
+      title: "View without authentication (Django, CBV)"
+      recommendation: >-
+        Inherit from LoginRequiredMixin or PermissionRequiredMixin as the first base
+        class. If the view must be public, document it and accept the finding with a
+        justification.
+      title_es: "Vista sin autenticación (Django, CBV)"
+      recommendation_es: >-
+        Heredar de LoginRequiredMixin o PermissionRequiredMixin como primera
+        clase base. Si la vista debe ser pública, documentarlo y aceptar el
+        hallazgo con justificación.
+    patterns:
+      - pattern: |
+          class $C(..., $BASE, ...):
+              ...
+      - metavariable-regex:
+          metavariable: $BASE
+          regex: ^(\w+\.)*(View|TemplateView|ListView|DetailView|CreateView|UpdateView|DeleteView|FormView|RedirectView|ArchiveIndexView)$
+      - pattern-not: |
+          class $C(..., LoginRequiredMixin, ...):
+              ...
+      - pattern-not: |
+          class $C(..., PermissionRequiredMixin, ...):
+              ...
+      - pattern-not: |
+          class $C(..., UserPassesTestMixin, ...):
+              ...
+      - pattern-not: |
+          class $C(..., $M.LoginRequiredMixin, ...):
+              ...
+      - pattern-not: |
+          class $C(..., $M.PermissionRequiredMixin, ...):
+              ...
+      - pattern-not: |
+          class $C(..., $M.UserPassesTestMixin, ...):
+              ...
+      - focus-metavariable: $C

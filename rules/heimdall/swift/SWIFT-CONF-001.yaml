@@ -1,0 +1,49 @@
+rules:
+  - id: SWIFT-CONF-001
+    languages: [regex]
+    severity: WARNING
+    message: >-
+      Insecure native configuration in the iOS app: App Transport Security
+      disabled (allows cleartext http traffic, globally or per domain) or
+      entitlements with get-task-allow, which allow attaching a debugger to
+      the application. Each one widens what an attacker with network or
+      device access can obtain.
+    metadata:
+      cwe: "CWE-16"
+      owasp: "A02:2025 Security Misconfiguration"
+      severity_hdl: medium
+      confidence: high
+      title_es: "Configuración insegura en Info.plist o .entitlements (Swift/iOS)"
+      title: "Insecure configuration in Info.plist or .entitlements (Swift/iOS)"
+      recommendation_es: >-
+        En Info.plist, quitar NSAllowsArbitraryLoads, NSAllowsArbitraryLoadsInWebContent
+        y NSExceptionAllowsInsecureHTTPLoads, y declarar excepciones solo por
+        dominio y, si es posible, solo para pruebas. En los archivos
+        .entitlements de la versión publicada, get-task-allow debe ser false u
+        omitirse; Xcode lo agrega solo a las compilaciones de depuración.
+      recommendation: >-
+        In Info.plist, remove NSAllowsArbitraryLoads,
+        NSAllowsArbitraryLoadsInWebContent and
+        NSExceptionAllowsInsecureHTTPLoads, and declare exceptions per domain
+        only and, if possible, for testing only. In .entitlements files of the
+        released version, get-task-allow must be false or omitted; Xcode adds
+        it only to debug builds.
+      message_es: >-
+        Configuración nativa insegura en la app de iOS: App Transport Security
+        desactivado (permite tráfico http sin cifrar, global o por dominio) o
+        derechos con get-task-allow, que permiten adjuntar un depurador a la
+        aplicación. Cada una amplía lo que un atacante con acceso a la red o al
+        dispositivo puede obtener.
+    paths:
+      include:
+        - "*.plist"
+        - "*.entitlements"
+      exclude:
+        - "**/*ebug*.entitlements"
+        - "**/*ebug*.plist"
+    pattern-either:
+      # NSAllowsArbitraryLoads a secas ya lo revisa DART-CONF-001 en cualquier
+      # Info.plist (incluido el de una app nativa): no se repite aquí.
+      - pattern-regex: <key>NSAllowsArbitraryLoads(?:InWebContent|ForMedia)</key>\s*<true\s*/>
+      - pattern-regex: <key>NSExceptionAllowsInsecureHTTPLoads</key>\s*<true\s*/>
+      - pattern-regex: <key>get-task-allow</key>\s*<true\s*/>

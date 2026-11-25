@@ -1,0 +1,32 @@
+rules:
+  - id: PHP-MAS-001
+    languages: [php]
+    severity: WARNING
+    message: >-
+      Mass assignment: every request field is saved, or the model protects none. A
+      user can modify fields they should not, such as the role or the record's
+      owner.
+    metadata:
+      cwe: "CWE-915"
+      owasp: "A06:2025 Insecure Design"
+      severity_hdl: medium
+      confidence: medium
+      message_es: >-
+        Asignación masiva: se guardan todos los campos de la petición, o el
+        modelo no protege ninguno. Un usuario puede modificar campos que no
+        debería, como el rol o el propietario del registro.
+      title: "Mass assignment (Laravel)"
+      recommendation: >-
+        Use $request->validated() or $request->only([...]) and declare $fillable on
+        the model with the allowed fields.
+      title_es: "Asignación masiva (Laravel)"
+      recommendation_es: >-
+        Usar $request->validated() o $request->only([...]) y declarar
+        $fillable en el modelo con los campos permitidos.
+    pattern-either:
+      - pattern: $MODEL::create($REQ->all())
+      - pattern: $OBJ->create($REQ->all())
+      - pattern: $OBJ->update($REQ->all())
+      - pattern: $OBJ->fill($REQ->all())
+      - pattern: $MODEL::insert($REQ->all())
+      - pattern-regex: \$guarded\s*=\s*(\[\s*\]|array\(\s*\))\s*;

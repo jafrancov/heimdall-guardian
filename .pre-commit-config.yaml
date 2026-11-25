@@ -1,0 +1,64 @@
+# Code QA. `pre-commit` is used from the machine's global installation:
+#   pre-commit install            (once per clone)
+#   pre-commit run --all-files    (the whole repository)
+# ruff, mypy and pytest run through `uv run` to use the versions pinned in uv.lock.
+minimum_pre_commit_version: "4.0.0"
+default_install_hook_types: [pre-commit, pre-push]
+default_stages: [pre-commit]
+
+# The fixtures and the demo project are deliberately vulnerable code and the licenses are
+# third-party text: no hook modifies them.
+exclude: ^(LICENSE$|licenses/|tests/fixtures/|tests/rules/fixtures/|examples/demo-project/|uv\.lock$)
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: check-yaml
+      - id: check-toml
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: check-added-large-files
+        args: [--maxkb=512]
+        # The original logos are source art and weigh more; the app uses reduced copies.
+        exclude: ^assets/
+      - id: detect-private-key
+      - id: debug-statements
+
+  - repo: local
+    hooks:
+      - id: uv-lock
+        name: uv.lock up to date with pyproject.toml
+        entry: uv lock --check
+        language: system
+        files: ^(pyproject\.toml|uv\.lock)$
+        pass_filenames: false
+      - id: ruff-check
+        name: ruff check
+        entry: uv run ruff check --fix --exit-non-zero-on-fix
+        language: system
+        types: [python]
+      - id: ruff-format
+        name: ruff format
+        entry: uv run ruff format
+        language: system
+        types: [python]
+      - id: mypy
+        name: mypy (strict)
+        entry: uv run mypy
+        language: system
+        types: [python]
+        pass_filenames: false
+      - id: pytest
+        name: pytest + minimum coverage
+        entry: uv run pytest -q --cov
+        language: system
+        always_run: true
+        pass_filenames: false
+        stages: [pre-commit, pre-push]

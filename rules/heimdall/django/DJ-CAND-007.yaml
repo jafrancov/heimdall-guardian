@@ -1,0 +1,45 @@
+rules:
+  - id: DJ-CAND-007
+    languages: [python]
+    severity: INFO
+    message: >-
+      An XML document is parsed from a value that is not a constant. It is only a point to review: the local AI checks whether untrusted input reaches it.
+    metadata:
+      candidate_kind: xxe
+      cwe: "CWE-611"
+      owasp: "A02:2025 Security Misconfiguration"
+      severity_hdl: medium
+      confidence: low
+      message_es: >-
+        Se analiza un documento XML a partir de un valor que no es constante. Es solo un punto por revisar: la IA local comprueba si le llega entrada no confiable.
+      title: "XML parsed from a variable (to review)"
+      recommendation: >-
+        Disable DTDs and external entities in the XML parser, or use a parser configured to refuse them.
+      title_es: "XML analizado desde una variable (por revisar)"
+      recommendation_es: >-
+        Desactiva los DTD y las entidades externas en el analizador XML, o usa uno configurado para rechazarlos.
+    patterns:
+      - pattern-either:
+          - pattern: lxml.etree.fromstring($X, ...)
+          - pattern: lxml.etree.parse($X, ...)
+          - pattern: lxml.etree.XML($X, ...)
+          - pattern: etree.fromstring($X, ...)
+          - pattern: etree.parse($X, ...)
+          - pattern: etree.XML($X, ...)
+          - pattern: xml.dom.minidom.parseString($X, ...)
+          - pattern: xml.dom.minidom.parse($X, ...)
+          - pattern: minidom.parseString($X, ...)
+          - pattern: minidom.parse($X, ...)
+          - pattern: xml.sax.parseString($X, ...)
+          - pattern: xml.sax.parse($X, ...)
+          - pattern: sax.parseString($X, ...)
+          - pattern: sax.parse($X, ...)
+          - pattern: xml.etree.ElementTree.fromstring($X, ...)
+          - pattern: xml.etree.ElementTree.parse($X, ...)
+          - pattern: ElementTree.fromstring($X, ...)
+          - pattern: ElementTree.parse($X, ...)
+          - pattern: ET.fromstring($X, ...)
+          - pattern: ET.parse($X, ...)
+      - metavariable-regex:
+          metavariable: $X
+          regex: ^(?!\s*[rb]?(["'])[^"']*\1\s*$)

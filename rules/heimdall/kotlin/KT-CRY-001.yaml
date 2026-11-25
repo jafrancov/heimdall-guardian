@@ -1,0 +1,49 @@
+rules:
+  - id: KT-CRY-001
+    languages: [regex]
+    severity: WARNING
+    message: >-
+      Weak cryptography: an MD5 or SHA-1 digest, AES encryption in ECB mode
+      (or plain "AES", which on Android is equivalent to ECB), DES, 3DES,
+      RC4 or Blowfish, a fixed initialization vector (IV), or a
+      non-cryptographic generator (Random) for a token, password, code or
+      salt. Data protected this way can be decrypted, forged or predicted.
+    metadata:
+      cwe: "CWE-327"
+      owasp: "A04:2025 Cryptographic Failures"
+      severity_hdl: medium
+      confidence: medium
+      title_es: "Algoritmo criptográfico débil, IV fijo o aleatorio inseguro (Kotlin/Android)"
+      title: "Weak cryptographic algorithm, fixed IV or insecure randomness (Kotlin/Android)"
+      recommendation_es: >-
+        Cifrar con AES/GCM/NoPadding con una llave del Android Keystore y un
+        IV nuevo y aleatorio en cada operación (guardarlo junto al texto
+        cifrado). Resumir con SHA-256 o superior, y guardar contraseñas con
+        un algoritmo lento (Argon2, bcrypt, PBKDF2 con muchas iteraciones).
+        Para tokens y códigos, usar SecureRandom.
+      recommendation: >-
+        Encrypt with AES/GCM/NoPadding using an Android Keystore key and a new
+        random IV for every operation (store it alongside the ciphertext).
+        Hash with SHA-256 or stronger, and store passwords with a slow
+        algorithm (Argon2, bcrypt, PBKDF2 with many iterations). For tokens
+        and codes, use SecureRandom.
+      message_es: >-
+        Criptografía débil: un resumen MD5 o SHA-1, un cifrado AES en modo ECB
+        (o "AES" a secas, que en Android equivale a ECB), DES, 3DES, RC4 o
+        Blowfish, un vector de inicialización (IV) fijo, o un generador no
+        criptográfico (Random) para un token, contraseña, código o sal. Los
+        datos protegidos así se pueden descifrar, falsificar o predecir.
+    paths:
+      include:
+        - "*.kt"
+    pattern-either:
+      - pattern-regex: >-
+          (?m)^(?![ \t]*//)[^\n]*?\bMessageDigest\.getInstance\(\s*"(?:MD5|MD2|MD4|SHA-?1)"
+      - pattern-regex: >-
+          (?m)^(?![ \t]*//)[^\n]*?\bCipher\.getInstance\(\s*"(?:AES(?:/ECB/[^"]*)?|DES(?:ede)?(?:/[^"]*)?|RC[24]|ARCFOUR|Blowfish(?:/[^"]*)?)"
+      - pattern-regex: >-
+          (?m)^(?![ \t]*//)[^\n]*?\b(?:IvParameterSpec|GCMParameterSpec)\(\s*(?:\d+\s*,\s*)?(?:"[^"\n]*"\.(?:toByteArray|encodeToByteArray|toByteArray\([^)]*\))|byteArrayOf\(|ByteArray\(\d+\)\s*\))
+      - pattern-regex: >-
+          (?m)^(?![ \t]*//)[^\n]*?\b\w*(?i:token|passw|pwd|otp|nonce|secret|salt|session|codigo|code|pin)\w*\s*(?::\s*\w+\s*)?=[^\n]*?(?<!Secure)\bRandom\b(?:\(|\.nextInt|\.nextLong|\.nextBytes|\.Default)
+      - pattern-regex: >-
+          (?m)^(?![ \t]*//)[^\n]*?\b\w*(?i:token|passw|pwd|otp|nonce|secret|salt|session|codigo)\w*\s*(?::\s*\w+\s*)?=[^\n]*?\.random\(\)

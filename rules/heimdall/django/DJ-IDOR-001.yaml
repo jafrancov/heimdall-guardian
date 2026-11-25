@@ -1,0 +1,37 @@
+rules:
+  - id: DJ-IDOR-001
+    languages: [python]
+    severity: WARNING
+    message: >-
+      An object is fetched only by its identifier, taken from the URL, without
+      filtering by the user or organization of the requester. Without other
+      validation, a user can read or modify other people's records by changing the
+      identifier (IDOR).
+    metadata:
+      cwe: "CWE-639"
+      owasp: "A01:2025 Broken Access Control"
+      severity_hdl: medium
+      confidence: low
+      message_es: >-
+        Se obtiene un objeto solo por su identificador, tomado de la URL, sin
+        filtrar por el usuario o la organización de quien consulta. Si no hay
+        otra validación, un usuario puede leer o modificar registros ajenos
+        cambiando el identificador (IDOR).
+      title: "Possible access to other people's objects (IDOR)"
+      recommendation: >-
+        Also filter by the owner, for example get_object_or_404(Model, pk=pk,
+        user=request.user), or check the permission on the object before using it.
+      title_es: "Posible acceso a objetos ajenos (IDOR)"
+      recommendation_es: >-
+        Filtrar también por el propietario, por ejemplo
+        get_object_or_404(Modelo, pk=pk, usuario=request.user), o verificar el
+        permiso sobre el objeto antes de usarlo.
+    patterns:
+      - pattern-inside: |
+          def $F(..., $ID, ...):
+              ...
+      - pattern-either:
+          - pattern: $MODEL.objects.get(pk=$ID)
+          - pattern: $MODEL.objects.get(id=$ID)
+          - pattern: get_object_or_404($MODEL, pk=$ID)
+          - pattern: get_object_or_404($MODEL, id=$ID)

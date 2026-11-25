@@ -1,0 +1,63 @@
+# Builds the desktop installers on demand only (Actions -> Build installers -> Run workflow).
+# The results are uploaded as workflow artifacts: they are private to this repository's
+# Actions and expire after 7 days. Nothing is published as a release.
+#
+# macOS: the .dmg layout is written through Finder by dmgbuild, which needs a GUI session;
+# GitHub's macOS runners provide one, so it normally works. If it ever hangs, build locally.
+name: Build installers
+
+on: workflow_dispatch
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macOS (Apple Silicon)
+            os: macos-latest
+          - name: Windows (x64)
+            os: windows-latest
+          # 22.04 rather than latest: binaries built against an older glibc run on more distros.
+          - name: Linux (x64)
+            os: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
+        with:
+          python-version: "3.12"
+          enable-cache: true
+      - run: uv sync --locked
+      # `flet build` only accepts the Flutter major.minor its Flet release pins (a newer
+      # stable is rejected), so install exactly the version Flet reports.
+      - name: Flutter version required by Flet
+        id: flutter
+        shell: bash
+        run: echo "version=$(uv run python -c 'import flet.version as v; print(v.flutter_version)')" >> "$GITHUB_OUTPUT"
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          channel: stable
+          flutter-version: ${{ steps.flutter.outputs.version }}
+          cache: true
+      - name: Linux build dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev \
+            liblzma-dev libmpv-dev libasound2-dev libsecret-1-dev
+      - name: Install Inno Setup
+        if: runner.os == 'Windows'
+        run: choco install innosetup -y
+      - run: uv run python tools/build_app.py
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: heimdall-guardian-${{ runner.os }}
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 7

@@ -1,0 +1,49 @@
+name: Bug report
+description: Something does not work as documented.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Do not report vulnerabilities in Heimdall Guardian here: see SECURITY.md.
+        Never paste secrets or code you are not allowed to share.
+  - type: input
+    id: version
+    attributes:
+      label: Heimdall Guardian version
+      description: Output of `hdl --version`.
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where does it happen?
+      options: [Desktop app, Command line, Reports, AI review, Installer, Other]
+    validations:
+      required: true
+  - type: input
+    id: system
+    attributes:
+      label: Operating system
+      placeholder: macOS 15 on Apple Silicon
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: The command or the clicks, the profile, and the kind of project (stack).
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected and what happened
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Output or error text
+      description: Mask any secret before pasting.
+      render: text

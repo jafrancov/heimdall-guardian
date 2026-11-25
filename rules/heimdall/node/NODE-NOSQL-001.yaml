@@ -1,0 +1,113 @@
+rules:
+  - id: NODE-NOSQL-001
+    languages: [javascript, typescript]
+    severity: ERROR
+    mode: taint
+    message: >-
+      A request value is used as a MongoDB or Mongoose filter without being
+      converted to a string: a JSON body such as {"$ne": null} changes the
+      meaning of the query (NoSQL injection). The $where operator with
+      request data also allows running JavaScript in the database.
+    metadata:
+      cwe: "CWE-943"
+      owasp: "A05:2025 Injection"
+      severity_hdl: high
+      confidence: medium
+      title_es: "Inyección NoSQL con datos de la petición (Node.js)"
+      title: "NoSQL injection with request data (Node.js)"
+      recommendation_es: >-
+        Convertir cada valor del filtro al tipo esperado antes de consultar
+        (String(valor), Number(valor), new ObjectId(valor)), validar el cuerpo
+        con un esquema (Joi, Zod, class-validator) o limpiar los operadores con
+        express-mongo-sanitize. No usar $where con datos del usuario.
+      recommendation: >-
+        Convert each filter value to the expected type before querying
+        (String(value), Number(value), new ObjectId(value)), validate the body
+        with a schema (Joi, Zod, class-validator), or strip operators with
+        express-mongo-sanitize. Do not use $where with user data.
+      message_es: >-
+        Un valor de la petición se usa como filtro de MongoDB o Mongoose sin
+        convertirlo a texto: un cuerpo JSON como {"$ne": null} cambia el sentido
+        de la consulta (inyección NoSQL). El operador $where con datos de la
+        petición permite además ejecutar JavaScript en la base.
+    pattern-sources:
+      - pattern: req.query
+      - pattern: req.body
+      - pattern: req.params
+      - pattern: req.headers
+      - pattern: req.cookies
+      - pattern: req.signedCookies
+      - pattern: req.get(...)
+      - pattern: req.header(...)
+      - pattern: request.query
+      - pattern: request.body
+      - pattern: request.params
+      - pattern: request.headers
+      - pattern: request.cookies
+      - pattern: ctx.query
+      - pattern: ctx.params
+      - pattern: ctx.request.body
+      - pattern: ctx.request.query
+      - patterns:
+          - pattern: |
+              class $C { $M(..., @$DEC(...) $X, ...) {...} }
+          - metavariable-regex:
+              metavariable: $DEC
+              regex: ^(Query|Body|Param|Headers|Cookies)$
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., ParseIntPipe, ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., new ParseIntPipe(...), ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., ParseFloatPipe, ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., new ParseFloatPipe(...), ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., ParseBoolPipe, ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., new ParseBoolPipe(...), ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., ParseUUIDPipe, ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., new ParseUUIDPipe(...), ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., ParseEnumPipe(...), ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., new ParseEnumPipe(...), ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., ParseDatePipe, ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., new ParseDatePipe(...), ...) $X, ...) {...} }
+          - focus-metavariable: $X
+    pattern-sanitizers:
+      - pattern: parseInt(...)
+      - pattern: parseFloat(...)
+      - pattern: Number(...)
+      - pattern: Number.parseInt(...)
+      - pattern: Math.floor(...)
+      - pattern: String(...)
+      - pattern: $X.toString()
+      - pattern: new ObjectId(...)
+      - pattern: ObjectId(...)
+      - pattern: new $NS.ObjectId(...)
+      - pattern: new $NS.Types.ObjectId(...)
+      - pattern: sanitize(...)
+      - pattern: mongoSanitize(...)
+      - pattern: $M.sanitize(...)
+      - pattern: $V.parse(...)
+      - pattern: $V.parseAsync(...)
+    pattern-sinks:
+      - patterns:
+          - pattern: $O.$M($Q, ...)
+          - metavariable-regex:
+              metavariable: $M
+              regex: ^(find|findOne|findOneAndUpdate|findOneAndDelete|findOneAndReplace|updateOne|updateMany|deleteOne|deleteMany|replaceOne|countDocuments)$
+          - pattern-not: |
+              $O.$M({..., where: ..., ...}, ...)
+          - pattern-not: $O.$M($ARG => ..., ...)
+          - pattern-not: $O.$M(function (...) {...}, ...)
+          - focus-metavariable: $Q
+      - patterns:
+          - pattern: |
+              {..., $where: $Q, ...}
+          - focus-metavariable: $Q

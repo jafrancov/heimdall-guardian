@@ -1,0 +1,35 @@
+rules:
+  - id: DART-LOG-001
+    languages: [regex]
+    severity: WARNING
+    message: >-
+      Logging of sensitive data: print, debugPrint, log or a logger receives
+      a variable that looks like a token, password, PIN or card data. Logs
+      can be read with adb logcat or the device console, and they reach
+      crash reporting tools.
+    metadata:
+      cwe: "CWE-532"
+      owasp: "A09:2025 Security Logging and Alerting Failures"
+      severity_hdl: medium
+      confidence: medium
+      title_es: "Dato sensible escrito en el registro (Dart/Flutter)"
+      title: "Sensitive data written to the log (Dart/Flutter)"
+      recommendation_es: >-
+        No registrar tokens, contraseñas, PIN, números de tarjeta ni
+        encabezados Authorization. Si hace falta rastrear el valor, registrar
+        solo su longitud o los últimos cuatro caracteres, y proteger los
+        registros de depuración con kDebugMode.
+      recommendation: >-
+        Do not log tokens, passwords, PINs, card numbers or Authorization
+        headers. If you need to trace the value, log only its length or the
+        last four characters, and protect debug logs with kDebugMode.
+      message_es: >-
+        Registro de datos sensibles: print, debugPrint, log o un logger reciben
+        una variable que parece un token, contraseña, PIN o dato de tarjeta. Los
+        registros se leen con adb logcat o la consola del dispositivo, y llegan a
+        herramientas de reporte de fallos.
+    paths:
+      include:
+        - "*.dart"
+    pattern-regex: >-
+      (?m)^(?![ \t]*//)[^\n]*?(?i:\b(?:print|debugPrint|(?:developer\.)?log|_?(?:log|logger|Log|Logger)\.(?:v|d|i|w|e|t|f|wtf|log|trace|debug|info|warning|warn|error|severe|fine|shout|verbose))\(\s*(?:("""|\x27\x27\x27|"|\x27)(?:(?!\1)[^\\]|\\.)*?(?<!\\)\$\{?[\w.?!]*(?:token|passw|pwd|contrase|secret|jwt|cvv|card_?num|creditcard|apikey|api_key)[\w]*+(?!\.(?:length|isEmpty|isNotEmpty))|("|\x27)[^"\x27\n]*\2\s*\+\s*[\w.?!]*(?:token|passw|pwd|contrase|secret|jwt|cvv|card_?num|creditcard|apikey|api_key)[\w]*+(?!\.(?:length|isEmpty|isNotEmpty))|[\w.?!]*(?:token|passw|pwd|contrase|secret|jwt|cvv|card_?num|creditcard|apikey|api_key)[\w]*+(?!\.(?:length|isEmpty|isNotEmpty))[\w.?!]*\s*[,)]))

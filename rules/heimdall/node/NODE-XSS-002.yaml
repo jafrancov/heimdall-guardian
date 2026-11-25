@@ -1,0 +1,68 @@
+rules:
+  - id: NODE-XSS-002
+    languages: [javascript, typescript]
+    severity: WARNING
+    message: >-
+      Dynamic HTML is inserted into the page (innerHTML, outerHTML,
+      insertAdjacentHTML, document.write, dangerouslySetInnerHTML or jQuery
+      .html). If the value includes unsanitized user data, it allows script
+      execution (DOM-based XSS).
+    metadata:
+      cwe: "CWE-79"
+      owasp: "A05:2025 Injection"
+      severity_hdl: medium
+      confidence: low
+      title_es: "HTML dinámico insertado en el DOM sin sanitizar (JavaScript)"
+      title: "Dynamic HTML inserted into the DOM without sanitizing (JavaScript)"
+      recommendation_es: >-
+        Asignar texto con textContent o crear nodos con createElement. Si hace
+        falta HTML, sanitizarlo antes con DOMPurify.sanitize(valor). En React,
+        evitar dangerouslySetInnerHTML o sanitizar el valor.
+      recommendation: >-
+        Assign text with textContent or create nodes with createElement. If
+        HTML is needed, sanitize it first with DOMPurify.sanitize(value). In
+        React, avoid dangerouslySetInnerHTML or sanitize the value.
+      message_es: >-
+        Se inserta HTML dinámico en la página (innerHTML, outerHTML,
+        insertAdjacentHTML, document.write, dangerouslySetInnerHTML o jQuery
+        .html). Si el valor incluye datos del usuario sin sanitizar, permite
+        ejecutar scripts (XSS basado en DOM).
+    # Symbolic propagation resolves a variable that only holds a string literal to
+    # that literal, so `var s = '<b>x</b>'; $(e).html(s)` is treated as a constant.
+    options:
+      symbolic_propagation: true
+    patterns:
+      - pattern-either:
+          - pattern: $E.innerHTML = $V
+          - pattern: $E.innerHTML += $V
+          - pattern: $E.outerHTML = $V
+          - pattern: document.write($V)
+          - pattern: document.writeln($V)
+          - pattern: $E.insertAdjacentHTML($P, $V)
+          - pattern: $E.bypassSecurityTrustHtml($V)
+          - pattern: |
+              {..., dangerouslySetInnerHTML: {..., __html: $V, ...}, ...}
+          - pattern: |
+              <$TAG ... dangerouslySetInnerHTML={{__html: $V}} ... />
+          - patterns:
+              - pattern: $J.html($V)
+              - metavariable-regex:
+                  metavariable: $J
+                  regex: ^(\$|jQuery)\(.*$
+      - pattern-not: $E.innerHTML = <... $E.innerHTML ...>
+      - pattern-not: $E.innerHTML += <... $E.innerHTML ...>
+      # A value that resolves to a constant string literal (also through a variable
+      # assigned only from literals) is fixed markup, not user data.
+      - pattern-not: $E.innerHTML = "..."
+      - pattern-not: $E.innerHTML += "..."
+      - pattern-not: $E.outerHTML = "..."
+      - pattern-not: document.write("...")
+      - pattern-not: document.writeln("...")
+      - pattern-not: $E.insertAdjacentHTML($P, "...")
+      - pattern-not: $J.html("...")
+      # Constant text written as a JS string literal (single, double or template
+      # without interpolation, escapes allowed) or a concatenation of only literals,
+      # and values that are already sanitized or escaped.
+      - metavariable-regex:
+          metavariable: $V
+          regex: (?s)^(?!\s*(?:'(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*"|`(?:[^`$\\]|\\.)*`)(?:\s*\+\s*(?:'(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*"|`(?:[^`$\\]|\\.)*`))*\s*$)(?!\s*(DOMPurify|[A-Za-z_.]*[sS]anitiz\w*\(|[A-Za-z_.]*[eE]scape\w*\(|xss\(|he\.encode|DOMPurify)).*$

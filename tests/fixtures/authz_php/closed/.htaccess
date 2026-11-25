@@ -1,0 +1,12 @@
+# close every PHP file
+<IfModule mod_authz_core.c>
+    <FilesMatch "(?i)\.(php|inc)$">
+        Require all denied
+    </FilesMatch>
+</IfModule>
+<IfModule !mod_authz_core.c>
+    <FilesMatch "(?i)\.(php|inc)$">
+        Order allow,deny
+        Deny from all
+    </FilesMatch>
+</IfModule>

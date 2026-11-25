@@ -1,0 +1,70 @@
+rules:
+  - id: SWIFT-STO-001
+    languages: [swift]
+    severity: ERROR
+    message: >-
+      Sensitive data saved in UserDefaults or @AppStorage: it is written to
+      an unencrypted plist file that is included in device backups and is
+      easily read on a jailbroken device or from an extracted backup.
+    metadata:
+      cwe: "CWE-312"
+      owasp: "A04:2025 Cryptographic Failures"
+      severity_hdl: high
+      confidence: medium
+      title_es: "Token o contraseña en UserDefaults o @AppStorage (Swift/iOS)"
+      title: "Token or password in UserDefaults or @AppStorage (Swift/iOS)"
+      recommendation_es: >-
+        Guardar tokens, contraseñas, PIN y llaves en el Keychain (SecItemAdd,
+        con kSecAttrAccessibleWhenUnlockedThisDeviceOnly o
+        kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly) y no en UserDefaults
+        ni en @AppStorage. Conservar en el dispositivo solo lo imprescindible y
+        con vigencia corta.
+      recommendation: >-
+        Store tokens, passwords, PINs and keys in the Keychain (SecItemAdd,
+        with kSecAttrAccessibleWhenUnlockedThisDeviceOnly or
+        kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly), not in UserDefaults
+        or @AppStorage. Keep only what is essential on the device, with a
+        short lifetime.
+      message_es: >-
+        Dato sensible guardado en UserDefaults o en @AppStorage: se escribe en un
+        archivo plist sin cifrar que se incluye en las copias de seguridad del
+        dispositivo y se lee sin esfuerzo con un dispositivo con jailbreak o
+        desde una copia extraída.
+    patterns:
+      - pattern-either:
+          - patterns:
+              - pattern-either:
+                  - pattern: |
+                      $D.set($V, forKey: $K)
+                  - pattern: |
+                      $D.setValue($V, forKey: $K)
+              - metavariable-regex:
+                  metavariable: $D
+                  regex: (?i)^.*(defaults|userdefault).*$
+              - metavariable-regex:
+                  metavariable: $V
+                  regex: (?i)^(?!true$|false$|nil$|\d|[\w.?!]*\.(?:count|isempty|length)$)
+              - metavariable-regex:
+                  metavariable: $K
+                  regex: (?i)^.*(token|passw|pwd|contrase|secret|api_?key|session|sesion|jwt|credential|refresh|userpin|pin_?code|passcode|(^|[^a-z])pin([^a-z]|$)).*$
+          - patterns:
+              - pattern-either:
+                  - pattern: |
+                      $D.set($V, forKey: $K)
+                  - pattern: |
+                      $D.setValue($V, forKey: $K)
+              - metavariable-regex:
+                  metavariable: $D
+                  regex: (?i)^.*(defaults|userdefault).*$
+              - metavariable-regex:
+                  metavariable: $V
+                  regex: (?i)^(?![\w.?!]*\.(?:count|isempty|length)$)[\w.?!]*(token|passw|pwd|contrase|secret|apikey|jwt|credential)[\w.?!]*$
+          - patterns:
+              - pattern-either:
+                  - pattern: '@AppStorage($K) var $V = $X'
+                  - pattern: '@AppStorage($K) var $V: $T = $X'
+                  - pattern: '@AppStorage($K) private var $V = $X'
+                  - pattern: '@AppStorage($K) private var $V: $T = $X'
+              - metavariable-regex:
+                  metavariable: $K
+                  regex: (?i)^.*(token|passw|pwd|contrase|secret|api_?key|session|sesion|jwt|credential|refresh|userpin|pin_?code|passcode|(^|[^a-z])pin([^a-z]|$)).*$

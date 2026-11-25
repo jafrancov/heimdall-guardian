@@ -1,0 +1,54 @@
+rules:
+  - id: NET-AUTH-001
+    languages: [csharp]
+    severity: ERROR
+    message: >-
+      Controller without [Authorize] on the class or on its actions. Unless a
+      global authorization filter exists, its actions are reachable without
+      logging in.
+    metadata:
+      cwe: "CWE-306"
+      owasp: "A01:2025 Broken Access Control"
+      severity_hdl: high
+      confidence: low
+      message_es: >-
+        Controlador sin [Authorize] en la clase ni en sus acciones. Salvo que
+        exista un filtro global de autorización, sus acciones son accesibles
+        sin iniciar sesión.
+      title: "Controller without [Authorize] (.NET)"
+      recommendation: >-
+        Add [Authorize] to the controller, or configure a global authorization
+        policy (FallbackPolicy) and mark only what must be public with
+        [AllowAnonymous].
+      title_es: "Controlador sin [Authorize] (.NET)"
+      recommendation_es: >-
+        Agregar [Authorize] al controlador, o configurar una política de
+        autorización global (FallbackPolicy) y marcar con [AllowAnonymous]
+        solo lo que deba ser público.
+    patterns:
+      - pattern: |
+          class $C : $BASE { ... }
+      - metavariable-regex:
+          metavariable: $BASE
+          regex: ^(Controller|ControllerBase|ApiController)$
+      - pattern-not: |
+          [Authorize]
+          class $C : $BASE { ... }
+      - pattern-not: |
+          [Authorize(...)]
+          class $C : $BASE { ... }
+      - pattern-not: |
+          class $C : $BASE {
+            ...
+            [Authorize]
+            $T $M(...) { ... }
+            ...
+          }
+      - pattern-not: |
+          class $C : $BASE {
+            ...
+            [Authorize(...)]
+            $T $M(...) { ... }
+            ...
+          }
+      - focus-metavariable: $C

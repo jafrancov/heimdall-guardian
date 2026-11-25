@@ -1,0 +1,41 @@
+rules:
+  - id: KT-STO-001
+    languages: [regex]
+    severity: ERROR
+    message: >-
+      Sensitive data saved in unencrypted SharedPreferences or DataStore:
+      both write files that can be read by anyone with the device rooted,
+      from a backup (adb backup, Auto Backup), or by another application
+      with access to that storage.
+    metadata:
+      cwe: "CWE-312"
+      owasp: "A04:2025 Cryptographic Failures"
+      severity_hdl: high
+      confidence: medium
+      title_es: "Token o contraseña en SharedPreferences o DataStore (Kotlin/Android)"
+      title: "Token or password in SharedPreferences or DataStore (Kotlin/Android)"
+      recommendation_es: >-
+        Guardar tokens, contraseñas, PIN y llaves cifrados con una llave del
+        Android Keystore: EncryptedSharedPreferences, o DataStore cifrado con
+        Tink. Conservar en el dispositivo solo lo imprescindible, con vigencia
+        corta, y excluir esos archivos de la copia de seguridad.
+      recommendation: >-
+        Store tokens, passwords, PINs and keys encrypted with an Android
+        Keystore key: EncryptedSharedPreferences, or DataStore encrypted with
+        Tink. Keep only what is essential on the device, with a short
+        lifetime, and exclude those files from backup.
+      message_es: >-
+        Dato sensible guardado en SharedPreferences o en DataStore sin cifrar:
+        ambos escriben archivos legibles por quien tenga el dispositivo con
+        root, por una copia de seguridad (adb backup, Auto Backup) o por otra
+        aplicación con acceso a ese almacenamiento.
+    paths:
+      include:
+        - "*.kt"
+    patterns:
+      - pattern-either:
+          - pattern-regex: >-
+              (?m)^(?![ \t]*//)[^\n]*?\bput(?:String|StringSet)\(\s*(?:"[^"\n]*(?i:token|passw|pwd|contrase|secret|api_?key|session|sesion|jwt|credential|refresh|(?<![a-z])pin(?:_?code)?(?![a-z])|passcode)[^"\n]*"|[A-Za-z_.]*(?i:token|passw|pwd|contrase|secret|api_?key|session|sesion|jwt|credential|refresh|(?<![a-z])pin(?:_?code)?(?![a-z])|passcode)[A-Za-z_.]*)\s*,
+          - pattern-regex: >-
+              (?m)^(?![ \t]*//)[^\n]*?\bstringPreferencesKey\(\s*"[^"\n]*(?i:token|passw|pwd|contrase|secret|api_?key|session|sesion|jwt|credential|refresh|(?<![a-z])pin(?:_?code)?(?![a-z])|passcode)[^"\n]*"
+      - pattern-not-regex: (?s)\A(?=.*(?:EncryptedSharedPreferences|EncryptedFile|MasterKey|AndroidKeyStore)).*\z

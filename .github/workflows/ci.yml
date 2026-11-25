@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  qa:
+    name: QA (pre-commit)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
+        with:
+          python-version: "3.12"
+          enable-cache: true
+      - run: uv sync --locked
+      # Opengrep and Gitleaks with a pinned version and verified SHA-256 (tools/tools.toml).
+      - run: uv run python tools/fetch_tools.py opengrep gitleaks
+      # The same hooks that run locally: hygiene, ruff, mypy and pytest with coverage.
+      - run: uvx pre-commit run --all-files --show-diff-on-failure
+        env:
+          # Without the engine, the rule tests fail instead of being skipped.
+          HDL_REQUIRE_RULE_ENGINE: "1"
+
+  # The test suite on the desktop platforms the app ships for.
+  tests:
+    name: Tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
+        with:
+          python-version: "3.14"
+          enable-cache: true
+      - run: uv sync --locked
+      - run: uv run python tools/fetch_tools.py opengrep gitleaks
+      # Coverage floor comes from pyproject.toml (--cov enforces fail_under).
+      # The rule engine is required on macOS only: its Windows build is not yet
+      # known to run the rule tests, so there they skip instead of failing.
+      - run: uv run pytest -q --cov
+        shell: bash
+        env:
+          HDL_REQUIRE_RULE_ENGINE: ${{ runner.os == 'macOS' && '1' || '' }}

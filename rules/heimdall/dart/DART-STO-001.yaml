@@ -1,0 +1,62 @@
+rules:
+  - id: DART-STO-001
+    languages: [dart]
+    severity: ERROR
+    message: >-
+      Sensitive data saved in unencrypted storage: SharedPreferences and
+      GetStorage write plain-text files that can be read by anyone with the
+      device rooted or jailbroken, or from a backup.
+    metadata:
+      cwe: "CWE-312"
+      owasp: "A04:2025 Cryptographic Failures"
+      severity_hdl: high
+      confidence: medium
+      title_es: "Token o contraseña en almacenamiento sin cifrar (Dart/Flutter)"
+      title: "Token or password in unencrypted storage (Dart/Flutter)"
+      recommendation_es: >-
+        Guardar tokens, contraseñas, PIN y llaves con flutter_secure_storage
+        (Keychain en iOS, Keystore en Android) y no en SharedPreferences ni
+        GetStorage. Conservar en el dispositivo solo lo imprescindible y con
+        vigencia corta.
+      recommendation: >-
+        Store tokens, passwords, PINs and keys with flutter_secure_storage
+        (Keychain on iOS, Keystore on Android), not in SharedPreferences or
+        GetStorage. Keep only what is essential on the device, with a short
+        lifetime.
+      message_es: >-
+        Dato sensible guardado en almacenamiento sin cifrar: SharedPreferences y
+        GetStorage escriben archivos de texto legibles por quien tenga el
+        dispositivo con root o jailbreak, o una copia de seguridad.
+    patterns:
+      - pattern-either:
+          - patterns:
+              - pattern-either:
+                  - pattern: $P.setString($K, $V)
+                  - pattern: $P.setStringList($K, $V)
+              - metavariable-regex:
+                  metavariable: $P
+                  regex: (?i)^(?!.*(secure|encrypted)).*$
+              - metavariable-regex:
+                  metavariable: $K
+                  regex: (?i)^.*(token|passw|pwd|contrase|secret|api_?key|session|sesion|jwt|credential|refresh|(^|[^a-z])pin([^a-z]|$)|userpin).*$
+          - patterns:
+              - pattern-either:
+                  - pattern: $P.setString($K, $V)
+                  - pattern: $P.setStringList($K, $V)
+              - metavariable-regex:
+                  metavariable: $P
+                  regex: (?i)^(?!.*(secure|encrypted)).*$
+              - metavariable-regex:
+                  metavariable: $V
+                  regex: (?i)^[\w.?!]*(token|passw|pwd|contrase|secret|api_?key|jwt|credential)[\w.?!]*$
+          - patterns:
+              - pattern: $B.write($K, $V)
+              - metavariable-regex:
+                  metavariable: $B
+                  regex: (?i)^.*(getstorage|storage|box).*$
+              - metavariable-regex:
+                  metavariable: $B
+                  regex: (?i)^(?!.*(secure|encrypted)).*$
+              - metavariable-regex:
+                  metavariable: $K
+                  regex: (?i)^.*(token|passw|pwd|contrase|secret|api_?key|session|sesion|jwt|credential|refresh).*$

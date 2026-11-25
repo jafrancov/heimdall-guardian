@@ -1,0 +1,55 @@
+rules:
+  - id: PHP-XSS-001
+    languages: [php]
+    severity: ERROR
+    mode: taint
+    message: >-
+      Request data is written to the page without escaping: it allows injecting
+      scripts into other users' browsers (XSS).
+    metadata:
+      cwe: "CWE-79"
+      owasp: "A05:2025 Injection"
+      severity_hdl: high
+      confidence: high
+      message_es: >-
+        Datos de la petición se escriben en la página sin escapar: permite
+        inyectar scripts en el navegador de otros usuarios (XSS).
+      title: "XSS: request data output without escaping (PHP)"
+      recommendation: >-
+        Escape with htmlspecialchars($value, ENT_QUOTES, 'UTF-8') when writing into
+        HTML, or use the template engine's automatic escaping.
+      title_es: "XSS: salida de datos de la petición sin escapar (PHP)"
+      recommendation_es: >-
+        Escapar con htmlspecialchars($valor, ENT_QUOTES, 'UTF-8') al escribir
+        en HTML, o usar el escapado automático del motor de plantillas.
+    pattern-sources:
+      - patterns:
+          - pattern-either:
+              - pattern: $_GET
+              - pattern: $_POST
+              - pattern: $_REQUEST
+              - pattern: $_COOKIE
+    pattern-sanitizers:
+      - pattern: htmlspecialchars(...)
+      - pattern: htmlentities(...)
+      - pattern: intval(...)
+      - pattern: (int) $X
+      - pattern: urlencode(...)
+    # The sink does not apply once the response was declared JSON with a literal
+    # Content-Type header earlier in the same scope: the browser does not render it as
+    # HTML. json_encode() alone is not a sanitizer (it does not escape "<" without
+    # JSON_HEX_TAG), so without that header the finding stays.
+    pattern-sinks:
+      - patterns:
+          - pattern-either:
+              - pattern: echo ...;
+              - pattern: print(...)
+              - pattern: printf(...)
+          - pattern-not-inside:
+              patterns:
+                - pattern: |
+                    header($H);
+                    ...
+                - metavariable-regex:
+                    metavariable: $H
+                    regex: (?is)^\s*['"]\s*content-type\s*:\s*(application/([a-z0-9.+-]*\+)?json|text/json)\b

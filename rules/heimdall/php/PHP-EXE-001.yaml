@@ -1,0 +1,45 @@
+rules:
+  - id: PHP-EXE-001
+    languages: [php]
+    severity: ERROR
+    message: >-
+      Execution of code or system commands with a variable argument. If the value
+      comes from the user, it allows arbitrary commands to run on the server.
+    metadata:
+      cwe: "CWE-78"
+      owasp: "A05:2025 Injection"
+      severity_hdl: critical
+      confidence: medium
+      message_es: >-
+        Ejecución de código o de comandos del sistema con un argumento variable.
+        Si el valor proviene del usuario, permite ejecutar comandos arbitrarios
+        en el servidor.
+      title: "Command execution with variable input (PHP)"
+      recommendation: >-
+        Remove eval/exec/system/shell_exec/passthru on variable data. If the command
+        is essential, use an allowlist of values and escapeshellarg() on each
+        argument.
+      title_es: "Ejecución de comandos con entrada variable (PHP)"
+      recommendation_es: >-
+        Eliminar eval/exec/system/shell_exec/passthru sobre datos variables. Si
+        el comando es indispensable, usar una lista blanca de valores y
+        escapeshellarg() en cada argumento.
+    patterns:
+      - pattern-either:
+          - pattern: eval($ARG)
+          - pattern: exec($ARG, ...)
+          - pattern: system($ARG, ...)
+          - pattern: shell_exec($ARG)
+          - pattern: passthru($ARG, ...)
+          - pattern: popen($ARG, ...)
+          - pattern: proc_open($ARG, ...)
+      - metavariable-regex:
+          metavariable: $ARG
+          regex: (?s).*\$[A-Za-z_].*
+      # Every variable sits inside escapeshellarg()/escapeshellcmd() (the argument can be
+      # joined with literals): there is no unescaped `$` left once those calls are skipped.
+      - metavariable-regex:
+          metavariable: $ARG
+          regex: (?s)^(?!(?:[^$]|escapeshell(?:arg|cmd)\s*\((?:[^()]|\((?:[^()]|\([^()]*\))*\))*\))*\Z)
+      - pattern-not: $F(escapeshellarg(...), ...)
+      - pattern-not: $F(escapeshellcmd(...), ...)

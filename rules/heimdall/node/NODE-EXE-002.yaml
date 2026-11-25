@@ -1,0 +1,105 @@
+rules:
+  - id: NODE-EXE-002
+    languages: [javascript, typescript]
+    severity: ERROR
+    mode: taint
+    message: >-
+      Request data is evaluated as JavaScript code (eval, new Function,
+      vm.runIn*Context, new vm.Script, or setTimeout/setInterval with a
+      string): this allows arbitrary code execution on the server.
+    metadata:
+      cwe: "CWE-95"
+      owasp: "A05:2025 Injection"
+      severity_hdl: critical
+      confidence: high
+      title_es: "Ejecución de código con datos de la petición (Node.js)"
+      title: "Code execution with request data (Node.js)"
+      recommendation_es: >-
+        Eliminar eval, new Function y vm sobre datos del usuario. Para
+        expresiones o formatos de datos usar un analizador específico
+        (JSON.parse, una librería de expresiones sin ejecución) y, para lógica
+        variable, una lista blanca de operaciones.
+      recommendation: >-
+        Remove eval, new Function and vm on user data. For expressions or data
+        formats, use a dedicated parser (JSON.parse, an expression library
+        that does not execute code) and, for variable logic, an allowlist of
+        operations.
+      message_es: >-
+        Datos de la petición se evalúan como código JavaScript (eval, new
+        Function, vm.runIn*Context, new vm.Script o setTimeout/setInterval con
+        texto): permite ejecutar código arbitrario en el servidor.
+    pattern-sources:
+      - pattern: req.query
+      - pattern: req.body
+      - pattern: req.params
+      - pattern: req.headers
+      - pattern: req.cookies
+      - pattern: req.signedCookies
+      - pattern: req.get(...)
+      - pattern: req.header(...)
+      - pattern: request.query
+      - pattern: request.body
+      - pattern: request.params
+      - pattern: request.headers
+      - pattern: request.cookies
+      - pattern: ctx.query
+      - pattern: ctx.params
+      - pattern: ctx.request.body
+      - pattern: ctx.request.query
+      - patterns:
+          - pattern: |
+              class $C { $M(..., @$DEC(...) $X, ...) {...} }
+          - metavariable-regex:
+              metavariable: $DEC
+              regex: ^(Query|Body|Param|Headers|Cookies)$
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., ParseIntPipe, ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., new ParseIntPipe(...), ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., ParseFloatPipe, ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., new ParseFloatPipe(...), ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., ParseBoolPipe, ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., new ParseBoolPipe(...), ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., ParseUUIDPipe, ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., new ParseUUIDPipe(...), ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., ParseEnumPipe(...), ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., new ParseEnumPipe(...), ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., ParseDatePipe, ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., new ParseDatePipe(...), ...) $X, ...) {...} }
+          - focus-metavariable: $X
+    pattern-sanitizers:
+      - pattern: parseInt(...)
+      - pattern: parseFloat(...)
+      - pattern: Number(...)
+      - pattern: Number.parseInt(...)
+      - pattern: Math.floor(...)
+    pattern-sinks:
+      - pattern: eval(...)
+      - pattern: new Function(...)
+      - pattern: Function(...)
+      - patterns:
+          - pattern: $VM.$F(...)
+          - metavariable-regex:
+              metavariable: $VM
+              regex: ^vm$
+          - metavariable-regex:
+              metavariable: $F
+              regex: ^(runInNewContext|runInThisContext|runInContext|compileFunction)$
+      - pattern: new vm.Script(...)
+      - pattern: new Script(...)
+      - patterns:
+          - pattern: $F($Q, ...)
+          - metavariable-regex:
+              metavariable: $F
+              regex: ^(setTimeout|setInterval)$
+          - focus-metavariable: $Q

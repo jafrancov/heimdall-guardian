@@ -1,0 +1,92 @@
+rules:
+  - id: PHP-CALL-001
+    languages: [php]
+    severity: ERROR
+    mode: taint
+    message: >-
+      A function, method or class name comes from the request and is called
+      dynamically ($name(...), call_user_func, new $class, $object->$method()). The
+      visitor chooses which code runs, so they can reach any function of the
+      application or of PHP itself.
+    metadata:
+      cwe: "CWE-94"
+      owasp: "A05:2025 Injection"
+      severity_hdl: critical
+      confidence: medium
+      message_es: >-
+        El nombre de una función, método o clase viene de la petición y se invoca de
+        forma dinámica ($nombre(...), call_user_func, new $clase, $objeto->$metodo()).
+        El visitante elige qué código se ejecuta, así que puede llegar a cualquier
+        función de la aplicación o del propio PHP.
+      title: "Dynamic call with a request-controlled name (PHP)"
+      recommendation: >-
+        Never call a name taken from the request. Map the accepted values to the
+        functions or classes you allow (a fixed array checked with in_array($x, $list,
+        true) or array_key_exists) and reject anything else before calling. A check
+        with function_exists or is_callable is not enough: it also accepts every
+        function PHP provides.
+      title_es: "Llamada dinámica con un nombre controlado por la petición (PHP)"
+      recommendation_es: >-
+        No invocar nunca un nombre tomado de la petición. Asociar los valores
+        aceptados con las funciones o clases permitidas (un arreglo fijo verificado
+        con in_array($x, $lista, true) o array_key_exists) y rechazar todo lo demás
+        antes de llamar. Verificar con function_exists o is_callable no basta:
+        también acepta todas las funciones que ofrece PHP.
+    pattern-sources:
+      - pattern: $_GET
+      - pattern: $_POST
+      - pattern: $_REQUEST
+      - pattern: $_COOKIE
+      - pattern: filter_input(...)
+      - pattern: filter_input_array(...)
+    pattern-sanitizers:
+      # Allowlist check on the name; it cleans the value after the check, so the call
+      # inside the positive branch or after an early exit is not reported.
+      - patterns:
+          - pattern: in_array($X, ...)
+          - focus-metavariable: $X
+        by-side-effect: true
+      - patterns:
+          - pattern: array_key_exists($X, ...)
+          - focus-metavariable: $X
+        by-side-effect: true
+      - patterns:
+          - pattern: isset($MAP[$X])
+          - focus-metavariable: $X
+        by-side-effect: true
+      # A lookup in a fixed map returns the mapped value, not the request value.
+      - pattern: (int) $X
+      - pattern: intval(...)
+    pattern-sinks:
+      - patterns:
+          - pattern-either:
+              - pattern: $F(...)
+              - pattern: call_user_func($F, ...)
+              - pattern: call_user_func_array($F, ...)
+              - pattern: new $F(...)
+              - pattern: $OBJ->$F(...)
+              - pattern: $CLS::$F(...)
+          - metavariable-regex:
+              metavariable: $F
+              regex: ^\$
+          # The allowlist check sits inside a compound condition (is_string($x) && ...,
+          # !isset($x) || !in_array(...)), where the engine does not clean the value by
+          # side effect, so the guard is matched here on the same variable: a negated
+          # check before the call (its branch rejects or replaces the value), or the call
+          # inside the branch where the check passes.
+          - pattern-not-inside: |
+              if (<... !in_array($F, ...) ...>) { ... }
+              ...
+          - pattern-not-inside: |
+              if (<... !array_key_exists($F, ...) ...>) { ... }
+              ...
+          - pattern-not-inside: |
+              if (<... !isset($MAP[$F]) ...>) { ... }
+              ...
+          - pattern-not-inside: |
+              if (<... in_array($F, ...) ...>) { ... }
+          - pattern-not-inside: |
+              if (<... array_key_exists($F, ...) ...>) { ... }
+          - pattern-not-inside: |
+              if (<... isset($MAP[$F]) ...>) { ... }
+          - focus-metavariable: $F

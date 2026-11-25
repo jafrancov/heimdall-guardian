@@ -1,0 +1,37 @@
+rules:
+  - id: NET-SQL-001
+    languages: [csharp]
+    severity: ERROR
+    message: >-
+      SQL query built with string concatenation or interpolation. If any value
+      comes from the user, it allows SQL injection.
+    metadata:
+      cwe: "CWE-89"
+      owasp: "A05:2025 Injection"
+      severity_hdl: high
+      confidence: medium
+      message_es: >-
+        Consulta SQL construida con concatenación o interpolación de cadenas.
+        Si algún valor proviene del usuario, permite inyección SQL.
+      title: "Dynamic SQL in a direct query (.NET)"
+      recommendation: >-
+        Use parameters (SqlParameter, FromSqlInterpolated, ExecuteSqlInterpolated)
+        or LINQ. Never concatenate values into the query text.
+      title_es: "SQL dinámico en consulta directa (.NET)"
+      recommendation_es: >-
+        Usar parámetros (SqlParameter, FromSqlInterpolated,
+        ExecuteSqlInterpolated) o LINQ. Nunca concatenar valores en el texto
+        de la consulta.
+    pattern-either:
+      - pattern: new SqlCommand($"...", ...)
+      - pattern: new SqlCommand("..." + $X, ...)
+      - pattern: new SqlCommand($X + "...", ...)
+      - pattern: $DB.ExecuteSqlRaw($"...", ...)
+      - pattern: $DB.ExecuteSqlRaw("..." + $X, ...)
+      - pattern: $DB.ExecuteSqlRaw($X + "...", ...)
+      - pattern: $DB.FromSqlRaw($"...", ...)
+      - pattern: $DB.FromSqlRaw("..." + $X, ...)
+      - pattern: $DB.FromSqlRaw($X + "...", ...)
+      - pattern: $CMD.CommandText = $"...";
+      - pattern: $CMD.CommandText = "..." + $X;
+      - pattern: $CMD.CommandText = $X + "...";

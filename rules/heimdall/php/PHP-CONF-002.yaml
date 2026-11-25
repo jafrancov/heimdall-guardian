@@ -1,0 +1,42 @@
+rules:
+  - id: PHP-CONF-002
+    languages: [regex]
+    severity: WARNING
+    message: >-
+      The production or debug flag is hard-coded in PHP (PRODUCTION = false, DEBUG =
+      true). Whatever the server's php.ini says, code that shows errors or turns on
+      debug behaviour from this flag does it in production too, and nobody notices
+      until the file is changed by hand on each deployment.
+    metadata:
+      cwe: "CWE-489"
+      owasp: "A02:2025 Security Misconfiguration"
+      severity_hdl: medium
+      confidence: medium
+      message_es: >-
+        La bandera de producción o de depuración está escrita en el código PHP
+        (PRODUCTION = false, DEBUG = true). Sin importar lo que diga el php.ini del
+        servidor, el código que muestra errores o activa la depuración a partir de
+        esta bandera lo hace también en producción, y nadie lo nota hasta que el
+        archivo se cambia a mano en cada despliegue.
+      title: "Hard-coded production/debug flag (PHP)"
+      recommendation: >-
+        Read the environment from the server configuration (an environment variable or
+        a file outside the repository) and default to production behaviour when it is
+        missing. Do not commit a debug value that changes what the application shows
+        to visitors.
+      title_es: "Bandera de producción o depuración fija en el código (PHP)"
+      recommendation_es: >-
+        Leer el ambiente de la configuración del servidor (una variable de entorno o
+        un archivo fuera del repositorio) y, si falta, usar el comportamiento de
+        producción. No versionar un valor de depuración que cambie lo que la
+        aplicación muestra a los visitantes.
+    paths:
+      include:
+        - "*.php"
+    pattern-either:
+      # const PRODUCTION = false;  /  define('PRODUCTION', false);
+      - pattern-regex: (?i)^[ \t]*const[ \t]+(PRODUCTION|PROD|IS_PRODUCTION|IN_PRODUCTION|PRODUCCION|ES_PRODUCCION)[ \t]*=[ \t]*(false|0)[ \t]*;
+      - pattern-regex: (?i)\bdefine\([ \t]*['"](PRODUCTION|PROD|IS_PRODUCTION|IN_PRODUCTION|PRODUCCION|ES_PRODUCCION)['"][ \t]*,[ \t]*(false|0)[ \t]*\)
+      # const DEBUG = true;  /  define('APP_DEBUG', true);
+      - pattern-regex: (?i)^[ \t]*const[ \t]+(DEBUG|APP_DEBUG|DEBUG_MODE)[ \t]*=[ \t]*(true|1)[ \t]*;
+      - pattern-regex: (?i)\bdefine\([ \t]*['"](DEBUG|APP_DEBUG|DEBUG_MODE)['"][ \t]*,[ \t]*(true|1)[ \t]*\)

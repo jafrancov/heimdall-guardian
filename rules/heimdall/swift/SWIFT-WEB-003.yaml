@@ -1,0 +1,33 @@
+rules:
+  - id: SWIFT-WEB-003
+    languages: [regex]
+    severity: WARNING
+    message: >-
+      Use of UIWebView: Apple has deprecated it, the App Store rejects apps
+      that include it, and it receives no security fixes. It does not
+      isolate the page process or let you restrict JavaScript execution the
+      way WKWebView does.
+    metadata:
+      cwe: "CWE-477"
+      owasp: "A03:2025 Software Supply Chain Failures"
+      severity_hdl: medium
+      confidence: high
+      title_es: "UIWebView obsoleto e inseguro (Swift/iOS)"
+      title: "Deprecated and insecure UIWebView (Swift/iOS)"
+      recommendation_es: >-
+        Migrar a WKWebView (WebKit), que corre en un proceso aparte y permite
+        controlar la navegación con WKNavigationDelegate. Para mostrar páginas
+        externas sin código propio, SFSafariViewController.
+      recommendation: >-
+        Migrate to WKWebView (WebKit), which runs in a separate process and
+        lets you control navigation with WKNavigationDelegate. To show
+        external pages without custom code, use SFSafariViewController.
+      message_es: >-
+        Uso de UIWebView: Apple lo declaró obsoleto, la App Store rechaza
+        aplicaciones que lo incluyen y no recibe correcciones de seguridad. No
+        aísla el proceso de la página ni permite restringir la ejecución de
+        JavaScript como WKWebView.
+    paths:
+      include:
+        - "*.swift"
+    pattern-regex: (?m)^(?![ \t]*//)[^\n]*?\bUIWebView(?:Delegate)?\b

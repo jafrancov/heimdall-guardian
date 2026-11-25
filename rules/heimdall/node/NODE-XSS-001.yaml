@@ -1,0 +1,118 @@
+rules:
+  - id: NODE-XSS-001
+    languages: [javascript, typescript]
+    severity: ERROR
+    mode: taint
+    message: >-
+      Request data is sent in the response (res.send, res.write, res.end)
+      without escaping. Express answers strings with text/html, so the
+      browser runs the injected HTML or script (reflected XSS).
+    metadata:
+      cwe: "CWE-79"
+      owasp: "A05:2025 Injection"
+      severity_hdl: high
+      confidence: medium
+      title_es: "XSS reflejado: datos de la petición en la respuesta sin escapar (Node.js)"
+      title: "Reflected XSS: request data in the response without escaping (Node.js)"
+      recommendation_es: >-
+        Escapar la salida con una función de codificación HTML (escape-html,
+        he.encode) o devolver JSON con res.json. Para HTML con formato usar una
+        plantilla que escape por defecto (EJS <%= %>, Handlebars {{ }}, Pug =) o
+        sanitizar con DOMPurify o sanitize-html.
+      recommendation: >-
+        Escape the output with an HTML encoding function (escape-html,
+        he.encode) or return JSON with res.json. For formatted HTML, use a
+        template engine that escapes by default (EJS <%= %>, Handlebars {{ }},
+        Pug =) or sanitize with DOMPurify or sanitize-html.
+      message_es: >-
+        Datos de la petición se envían en la respuesta (res.send, res.write,
+        res.end) sin escapar. Express responde con text/html a los textos, por
+        lo que el navegador ejecuta el HTML o el script inyectado (XSS
+        reflejado).
+    pattern-sources:
+      - pattern: req.query
+      - pattern: req.body
+      - pattern: req.params
+      - pattern: req.headers
+      - pattern: req.cookies
+      - pattern: req.signedCookies
+      - pattern: req.get(...)
+      - pattern: req.header(...)
+      - pattern: request.query
+      - pattern: request.body
+      - pattern: request.params
+      - pattern: request.headers
+      - pattern: request.cookies
+      - pattern: ctx.query
+      - pattern: ctx.params
+      - pattern: ctx.request.body
+      - pattern: ctx.request.query
+      - patterns:
+          - pattern: |
+              class $C { $M(..., @$DEC(...) $X, ...) {...} }
+          - metavariable-regex:
+              metavariable: $DEC
+              regex: ^(Query|Body|Param|Headers|Cookies)$
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., ParseIntPipe, ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., new ParseIntPipe(...), ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., ParseFloatPipe, ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., new ParseFloatPipe(...), ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., ParseBoolPipe, ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., new ParseBoolPipe(...), ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., ParseUUIDPipe, ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., new ParseUUIDPipe(...), ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., ParseEnumPipe(...), ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., new ParseEnumPipe(...), ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., ParseDatePipe, ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., new ParseDatePipe(...), ...) $X, ...) {...} }
+          - focus-metavariable: $X
+    pattern-sanitizers:
+      - pattern: escapeHtml(...)
+      - pattern: escape(...)
+      - pattern: $E.escape(...)
+      - pattern: $E.encode(...)
+      - pattern: $E.escapeHtml(...)
+      - pattern: xss(...)
+      - pattern: sanitizeHtml(...)
+      - pattern: ejs.render(...)
+      - pattern: ejs.renderFile(...)
+      - pattern: pug.render(...)
+      - pattern: pug.renderFile(...)
+      - pattern: Mustache.render(...)
+      - pattern: nunjucks.render(...)
+      - pattern: $H.compile(...)(...)
+      - pattern: $E.sanitize(...)
+      - pattern: encodeURIComponent(...)
+      - pattern: JSON.stringify(...)
+      - pattern: parseInt(...)
+      - pattern: parseFloat(...)
+      - pattern: Number(...)
+      - pattern: Number.parseInt(...)
+      - pattern: Math.floor(...)
+    pattern-sinks:
+      - patterns:
+          - pattern: $RES.$M($Q, ...)
+          - metavariable-regex:
+              metavariable: $RES
+              regex: (?s)^(res|response|reply)\b(?!.*(json|type\(.application/json)).*$
+          - metavariable-regex:
+              metavariable: $M
+              regex: ^(send|write|end)$
+          - metavariable-regex:
+              metavariable: $Q
+              regex: (?s)^(?!(req|request|ctx)(\.request)?\.(query|body|params|headers|cookies)$).*$
+          - pattern-not: $RES.$M({...}, ...)
+          - pattern-not: $RES.$M([...], ...)
+          - focus-metavariable: $Q

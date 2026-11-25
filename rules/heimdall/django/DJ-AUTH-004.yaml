@@ -1,0 +1,32 @@
+rules:
+  - id: DJ-AUTH-004
+    languages: [python]
+    severity: WARNING
+    message: >-
+      CSRF protection is turned off. An external site can make an authenticated
+      user's browser run this operation without the user knowing.
+    metadata:
+      cwe: "CWE-352"
+      owasp: "A01:2025 Broken Access Control"
+      severity_hdl: medium
+      confidence: high
+      message_es: >-
+        Protección CSRF desactivada. Un sitio externo puede hacer que el
+        navegador de un usuario autenticado ejecute esta operación sin que lo
+        sepa.
+      title: "CSRF protection disabled (@csrf_exempt)"
+      recommendation: >-
+        Remove csrf_exempt and send the CSRF token from the client. For APIs
+        consumed by other systems, use token authentication instead of sessions.
+      title_es: "Protección CSRF desactivada (@csrf_exempt)"
+      recommendation_es: >-
+        Quitar csrf_exempt y enviar el token CSRF desde el cliente. Para APIs
+        consumidas por otros sistemas, usar autenticación por token en lugar
+        de sesión.
+    pattern-either:
+      - pattern: |
+          @csrf_exempt
+          def $F(...):
+              ...
+      - pattern: csrf_exempt($VIEW)
+      - pattern: method_decorator(csrf_exempt, ...)

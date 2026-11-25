@@ -1,0 +1,63 @@
+Heimdall Guardian
+Copyright 2026 Alejandro Franco
+
+This product is distributed under the Apache License, Version 2.0 (see LICENSE).
+
+Name and trademarks
+-------------------
+Heimdall Guardian is an independent open-source project. It is not affiliated with,
+sponsored or endorsed by any company, product or brand with a similar name. Trademarks
+mentioned belong to their respective owners.
+
+Graphic elements
+----------------
+The notice below is the author's legal text and is kept in Spanish, as written:
+
+Los elementos gráficos de HEIMDALL fueron desarrollados mediante un proceso
+creativo asistido por herramientas de inteligencia artificial, con decisiones de
+selección, adaptación y definición de identidad realizadas durante el desarrollo
+del proyecto. Su utilización y protección estarán sujetas a los derechos
+efectivamente reconocidos por la legislación aplicable.
+
+Courtesy translation, with no legal value of its own: The graphic elements of
+HEIMDALL were developed through a creative process assisted by artificial
+intelligence tools, with selection, adaptation and identity-definition decisions
+made during the development of the project. Their use and protection will be
+subject to the rights effectively recognized by the applicable law.
+
+Third-party components
+----------------------
+The installer includes, unmodified, the executables of Opengrep (LGPL-2.1),
+Gitleaks (MIT), Trivy (Apache-2.0) and OSV-Scanner (Apache-2.0). The detail, with
+versions and where to get their source code, is in THIRD-PARTY-NOTICES.md; the
+texts of their licenses are in the licenses/ folder.
+
+======================================================================
+Versión en español
+======================================================================
+
+Heimdall Guardian
+Copyright 2026 Alejandro Franco
+
+Este producto se distribuye bajo la Licencia Apache, Versión 2.0 (ver LICENSE).
+
+Nombre y marcas
+---------------
+Heimdall Guardian es un proyecto independiente de código abierto. No está afiliado,
+patrocinado ni respaldado por ninguna empresa, producto o marca de nombre parecido.
+Las marcas que se mencionan pertenecen a sus respectivos titulares.
+
+Elementos gráficos
+------------------
+Los elementos gráficos de HEIMDALL fueron desarrollados mediante un proceso
+creativo asistido por herramientas de inteligencia artificial, con decisiones de
+selección, adaptación y definición de identidad realizadas durante el desarrollo
+del proyecto. Su utilización y protección estarán sujetas a los derechos
+efectivamente reconocidos por la legislación aplicable.
+
+Componentes de terceros
+-----------------------
+El instalador incluye, sin modificar, los ejecutables de Opengrep (LGPL-2.1),
+Gitleaks (MIT), Trivy (Apache-2.0) y OSV-Scanner (Apache-2.0). El detalle, con
+versiones y dónde obtener su código fuente, está en THIRD-PARTY-NOTICES.md; los
+textos de sus licencias, en la carpeta licenses/.

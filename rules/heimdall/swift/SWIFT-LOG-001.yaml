@@ -1,0 +1,39 @@
+rules:
+  - id: SWIFT-LOG-001
+    languages: [regex]
+    severity: WARNING
+    message: >-
+      Logging of sensitive data: print, NSLog, os_log or a logger receives a
+      variable that looks like a token, password, PIN or card data. The iOS
+      unified log can be read with Console.app and a connected device,
+      appears in sysdiagnose, and reaches crash reporting tools. With
+      Logger, privacy: .public deliberately leaves it visible.
+    metadata:
+      cwe: "CWE-532"
+      owasp: "A09:2025 Security Logging and Alerting Failures"
+      severity_hdl: medium
+      confidence: medium
+      title_es: "Dato sensible escrito en el registro (Swift/iOS)"
+      title: "Sensitive data written to the log (Swift/iOS)"
+      recommendation_es: >-
+        No registrar tokens, contraseñas, PIN, números de tarjeta ni
+        encabezados Authorization. Si hace falta rastrear el valor, registrar
+        solo su longitud o los últimos cuatro caracteres. Con Logger, dejar la
+        privacidad por defecto o usar privacy: .private, y envolver las
+        trazas de depuración en #if DEBUG.
+      recommendation: >-
+        Do not log tokens, passwords, PINs, card numbers or Authorization
+        headers. If you need to trace the value, log only its length or the
+        last four characters. With Logger, keep the default privacy or use
+        privacy: .private, and wrap debug traces in #if DEBUG.
+      message_es: >-
+        Registro de datos sensibles: print, NSLog, os_log o un logger reciben una
+        variable que parece un token, contraseña, PIN o dato de tarjeta. El
+        registro unificado de iOS se lee con Console.app y con un dispositivo
+        conectado, aparece en sysdiagnose y llega a herramientas de reporte de
+        fallos. En Logger, privacy: .public lo deja visible a propósito.
+    paths:
+      include:
+        - "*.swift"
+    pattern-regex: >-
+      (?m)^(?![ \t]*//)[^\n]*?(?i:\b(?:print|debugPrint|dump|NSLog|os_log|(?:\w*logger|log)\.(?:debug|info|notice|error|fault|warning|warn|trace|critical|log|verbose))\((?:[^"\n]*?,\s*)?(?:"(?:[^"\\\n]|\\[^(\n])*?\\\(\s*[\w.?!]*(?:token|passw|pwd|contrase|secret|jwt|cvv|card_?num|creditcard|apikey|api_key|(?<![a-z])pin(?:_?code)?(?![a-z]))[\w]*+(?!\.(?:count|isEmpty|prefix|suffix)|\s*,\s*privacy:\s*\.private)|"[^"\n]*"\s*\+\s*[\w.?!]*(?:token|passw|pwd|contrase|secret|jwt|cvv|card_?num|creditcard|apikey|api_key)[\w]*+(?!\.(?:count|isEmpty|prefix|suffix))|(?:"(?:[^"\\\n]|\\.)*"\s*,\s*)?[\w.?!]*(?:token|passw|pwd|contrase|secret|jwt|cvv|card_?num|creditcard|apikey|api_key)[\w]*+(?!\.(?:count|isEmpty|prefix|suffix))[\w.?!]*\s*[,)]))

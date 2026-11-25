@@ -1,0 +1,33 @@
+rules:
+  - id: DJ-XSS-002
+    languages: [regex]
+    severity: WARNING
+    message: >-
+      The template turns off automatic HTML escaping (safe filter or autoescape
+      off). If the value contains user data, it allows script injection (XSS).
+    metadata:
+      cwe: "CWE-79"
+      owasp: "A05:2025 Injection"
+      severity_hdl: medium
+      confidence: medium
+      message_es: >-
+        La plantilla desactiva el escapado automático de HTML (filtro safe o
+        autoescape off). Si el valor contiene datos del usuario, permite
+        inyectar scripts (XSS).
+      title: "Unescaped HTML in a template (|safe, autoescape off)"
+      recommendation: >-
+        Remove the safe filter or the autoescape off block. If rich HTML is needed,
+        sanitize it on the server first with an allowlist of tags.
+      title_es: "HTML sin escapar en plantilla (|safe, autoescape off)"
+      recommendation_es: >-
+        Quitar el filtro safe o el bloque autoescape off. Si se necesita HTML
+        enriquecido, limpiarlo antes en el servidor con una lista blanca de
+        etiquetas.
+    paths:
+      include:
+        - "*.html"
+        - "*.htm"
+        - "*.djhtml"
+    pattern-either:
+      - pattern-regex: \{\{[^}\n]*\|\s*safe\b[^}\n]*\}\}
+      - pattern-regex: \{%-?\s*autoescape\s+off\s*-?%\}

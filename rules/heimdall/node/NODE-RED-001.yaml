@@ -1,0 +1,105 @@
+rules:
+  - id: NODE-RED-001
+    languages: [javascript, typescript]
+    severity: WARNING
+    mode: taint
+    message: >-
+      Request data decides where the server redirects (res.redirect,
+      res.location). A crafted link can send the user to a fake site that
+      looks like the application (open redirect).
+    metadata:
+      cwe: "CWE-601"
+      owasp: "A01:2025 Broken Access Control"
+      severity_hdl: medium
+      confidence: medium
+      title_es: "Redirección abierta con datos de la petición (Node.js)"
+      title: "Open redirect with request data (Node.js)"
+      recommendation_es: >-
+        Redirigir solo a rutas relativas propias: comprobar que el destino
+        empiece con una sola diagonal (y no con // ni con un esquema) o
+        compararlo contra una lista blanca de destinos y hosts.
+      recommendation: >-
+        Redirect only to your own relative paths: check that the destination
+        starts with a single slash (not // or a scheme) or compare it against
+        an allowlist of destinations and hosts.
+      message_es: >-
+        Un dato de la petición decide a dónde redirige el servidor
+        (res.redirect, res.location). Un enlace manipulado puede llevar a la
+        persona a un sitio falso con la apariencia de la aplicación (redirección
+        abierta).
+    pattern-sources:
+      - pattern: req.query
+      - pattern: req.body
+      - pattern: req.params
+      - pattern: req.headers
+      - pattern: req.cookies
+      - pattern: req.signedCookies
+      - pattern: req.get(...)
+      - pattern: req.header(...)
+      - pattern: request.query
+      - pattern: request.body
+      - pattern: request.params
+      - pattern: request.headers
+      - pattern: request.cookies
+      - pattern: ctx.query
+      - pattern: ctx.params
+      - pattern: ctx.request.body
+      - pattern: ctx.request.query
+      - patterns:
+          - pattern: |
+              class $C { $M(..., @$DEC(...) $X, ...) {...} }
+          - metavariable-regex:
+              metavariable: $DEC
+              regex: ^(Query|Body|Param|Headers|Cookies)$
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., ParseIntPipe, ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., new ParseIntPipe(...), ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., ParseFloatPipe, ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., new ParseFloatPipe(...), ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., ParseBoolPipe, ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., new ParseBoolPipe(...), ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., ParseUUIDPipe, ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., new ParseUUIDPipe(...), ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., ParseEnumPipe(...), ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., new ParseEnumPipe(...), ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., ParseDatePipe, ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., new ParseDatePipe(...), ...) $X, ...) {...} }
+          - focus-metavariable: $X
+    pattern-sanitizers:
+      - pattern: encodeURIComponent(...)
+      - pattern: |
+          `${process.env.$ENVVAR}...`
+      - pattern: process.env.$ENVVAR + ...
+      - pattern: |
+          `${this.configService.get(...)}...`
+      - pattern: |
+          `${$CFG.get(...)}...`
+      - patterns:
+          - pattern: $X[...]
+          - metavariable-regex:
+              metavariable: $X
+              regex: ^(?!(req|request|ctx)\b)
+    pattern-sinks:
+      - patterns:
+          - pattern-either:
+              - pattern: $RES.redirect($U, ...)
+              - pattern: $RES.redirect($S, $U)
+              - pattern: $RES.location($U)
+          - metavariable-regex:
+              metavariable: $RES
+              regex: (?s)^(res|response|reply)\b.*$
+          - metavariable-regex:
+              metavariable: $U
+              regex: (?s)^(?!\s*[`"']/[^/`"'$\\]).*$
+          - focus-metavariable: $U

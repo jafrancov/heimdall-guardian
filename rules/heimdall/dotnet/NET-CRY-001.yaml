@@ -1,0 +1,36 @@
+rules:
+  - id: NET-CRY-001
+    languages: [csharp]
+    severity: WARNING
+    message: >-
+      Weak cryptographic algorithm (MD5, SHA-1, DES or 3DES). It is not suitable
+      for protecting passwords or sensitive data.
+    metadata:
+      cwe: "CWE-327"
+      owasp: "A04:2025 Cryptographic Failures"
+      severity_hdl: medium
+      confidence: medium
+      message_es: >-
+        Algoritmo criptográfico débil (MD5, SHA-1, DES o 3DES). No es apto para
+        proteger contraseñas ni datos sensibles.
+      title: "Weak cryptography (.NET)"
+      recommendation: >-
+        For passwords, use ASP.NET Identity's PasswordHasher or Rfc2898DeriveBytes
+        (PBKDF2). For encryption, use AES; for integrity, SHA-256 or higher.
+      title_es: "Criptografía débil (.NET)"
+      recommendation_es: >-
+        Para contraseñas, usar PasswordHasher de ASP.NET Identity o
+        Rfc2898DeriveBytes (PBKDF2). Para cifrado, AES; para integridad,
+        SHA-256 o superior.
+    pattern-either:
+      - pattern: MD5.Create(...)
+      - pattern: SHA1.Create(...)
+      - pattern: DES.Create(...)
+      - pattern: TripleDES.Create(...)
+      - pattern: MD5.HashData(...)
+      - pattern: SHA1.HashData(...)
+      - pattern: new MD5CryptoServiceProvider(...)
+      - pattern: new SHA1CryptoServiceProvider(...)
+      - pattern: new SHA1Managed(...)
+      - pattern: new DESCryptoServiceProvider(...)
+      - pattern: new TripleDESCryptoServiceProvider(...)

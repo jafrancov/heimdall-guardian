@@ -1,0 +1,42 @@
+rules:
+  - id: SWIFT-WEB-002
+    languages: [swift]
+    severity: ERROR
+    message: >-
+      The WKWebView lets a page opened from a local file read other files on
+      the device (allowFileAccessFromFileURLs) or from any origin
+      (allowUniversalAccessFromFileURLs). A malicious HTML file saved or
+      downloaded in the application can read its files and send them to an
+      external server.
+    metadata:
+      cwe: "CWE-749"
+      owasp: "A06:2025 Insecure Design"
+      severity_hdl: high
+      confidence: high
+      title_es: "WKWebView con acceso universal a archivos locales (Swift/iOS)"
+      title: "WKWebView with universal access to local files (Swift/iOS)"
+      recommendation_es: >-
+        No activar allowFileAccessFromFileURLs ni allowUniversalAccessFromFileURLs.
+        Para mostrar contenido local, usar loadFileURL(_:allowingReadAccessTo:)
+        con la carpeta mínima necesaria, y cargar el contenido remoto solo por
+        https.
+      recommendation: >-
+        Do not enable allowFileAccessFromFileURLs or
+        allowUniversalAccessFromFileURLs. To display local content, use
+        loadFileURL(_:allowingReadAccessTo:) with the minimum necessary
+        folder, and load remote content over https only.
+      message_es: >-
+        El WKWebView permite que una página abierta desde un archivo local lea
+        otros archivos del dispositivo (allowFileAccessFromFileURLs) o cualquier
+        origen (allowUniversalAccessFromFileURLs). Un HTML malicioso guardado o
+        descargado en la aplicación puede leer sus archivos y enviarlos a un
+        servidor externo.
+    pattern-either:
+      - pattern: |
+          $P.setValue(true, forKey: "allowFileAccessFromFileURLs")
+      - pattern: |
+          $P.setValue(true, forKey: "allowUniversalAccessFromFileURLs")
+      - pattern: |
+          $P.setValue(1, forKey: "allowFileAccessFromFileURLs")
+      - pattern: |
+          $P.setValue(1, forKey: "allowUniversalAccessFromFileURLs")

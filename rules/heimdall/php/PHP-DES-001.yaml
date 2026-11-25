@@ -1,0 +1,33 @@
+rules:
+  - id: PHP-DES-001
+    languages: [php]
+    severity: ERROR
+    mode: taint
+    message: >-
+      unserialize() on request data: it allows arbitrary objects to be
+      instantiated and can lead to remote code execution.
+    metadata:
+      cwe: "CWE-502"
+      owasp: "A08:2025 Software or Data Integrity Failures"
+      severity_hdl: high
+      confidence: high
+      message_es: >-
+        unserialize() sobre datos de la petición: permite instanciar objetos
+        arbitrarios y puede derivar en ejecución remota de código.
+      title: "Deserialization of request data (PHP)"
+      recommendation: >-
+        Exchange data with json_decode(). If unserialize() is essential, use
+        ['allowed_classes' => false] and sign the content.
+      title_es: "Deserialización de datos de la petición (PHP)"
+      recommendation_es: >-
+        Intercambiar datos con json_decode(). Si unserialize() es
+        indispensable, usar ['allowed_classes' => false] y firmar el contenido.
+    pattern-sources:
+      - patterns:
+          - pattern-either:
+              - pattern: $_GET
+              - pattern: $_POST
+              - pattern: $_REQUEST
+              - pattern: $_COOKIE
+    pattern-sinks:
+      - pattern: unserialize(...)

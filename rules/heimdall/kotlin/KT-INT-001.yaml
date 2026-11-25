@@ -1,0 +1,51 @@
+rules:
+  - id: KT-INT-001
+    languages: [regex]
+    severity: WARNING
+    message: >-
+      Inter-component communication that another application can abuse: a
+      PendingIntent without FLAG_IMMUTABLE (an application that receives it
+      can fill in or change its Intent and act with this app's permissions),
+      a receiver registered without RECEIVER_NOT_EXPORTED that accepts
+      messages from any application, or a sendBroadcast with sensitive data
+      and no permission that any installed application can receive.
+    metadata:
+      cwe: "CWE-927"
+      owasp: "A01:2025 Broken Access Control"
+      severity_hdl: medium
+      confidence: low
+      title_es: "PendingIntent mutable, receptor expuesto o difusión sin permiso (Kotlin/Android)"
+      title: "Mutable PendingIntent, exposed receiver or broadcast without permission (Kotlin/Android)"
+      recommendation_es: >-
+        Crear los PendingIntent con PendingIntent.FLAG_IMMUTABLE (usar
+        FLAG_MUTABLE solo cuando el sistema deba rellenarlo, y entonces con un
+        Intent explícito). Registrar los receptores internos con
+        ContextCompat.registerReceiver(..., ContextCompat.RECEIVER_NOT_EXPORTED).
+        Para difusiones con datos sensibles usar Intent explícito
+        (setPackage) o sendBroadcast(intent, permiso) con un permiso propio de
+        firma.
+      recommendation: >-
+        Create PendingIntents with PendingIntent.FLAG_IMMUTABLE (use
+        FLAG_MUTABLE only when the system must fill it in, and then with an
+        explicit Intent). Register internal receivers with
+        ContextCompat.registerReceiver(...,
+        ContextCompat.RECEIVER_NOT_EXPORTED). For broadcasts with sensitive
+        data, use an explicit Intent (setPackage) or sendBroadcast(intent,
+        permission) with your own signature-level permission.
+      message_es: >-
+        Comunicación entre componentes que otra aplicación puede aprovechar: un
+        PendingIntent sin FLAG_IMMUTABLE (una aplicación que lo reciba puede
+        rellenar o cambiar su Intent y actuar con los permisos de esta), un
+        receptor registrado sin RECEIVER_NOT_EXPORTED que acepta mensajes de
+        cualquier aplicación, o un sendBroadcast con datos sensibles sin
+        permiso que lo reciba cualquier aplicación instalada.
+    paths:
+      include:
+        - "*.kt"
+    pattern-either:
+      - pattern-regex: >-
+          \bPendingIntent\.get(?:Activity|Activities|Service|Broadcast|ForegroundService)\((?:(?!FLAG_IMMUTABLE)(?:[^()]|\((?:[^()]|\([^()]*\))*\)))*\)
+      - pattern-regex: >-
+          (?m)^(?![ \t]*//)[^\n]*?\bregisterReceiver\((?![^\n]*\bACTION_)\s*[^,()\n]+,\s*(?!IntentFilter\(\s*(?:Intent|ConnectivityManager|BluetoothAdapter|WifiManager|android\.))(?![^,()\n]*(?:ACTION_|Intent\.))[^,()\n]*(?:\([^()\n]*\))?\s*\)
+      - pattern-regex: >-
+          \bputExtra\(\s*(?:"[^"\n]*(?i:token|passw|pwd|secret|jwt|session|credential)[^"\n]*"|\w*(?i:token|passw|pwd|secret|jwt|session|credential)\w*)\s*,[^}]{0,300}?\bsendBroadcast\([^,)]*(?:\([^()]*\))?[^,)]*\)

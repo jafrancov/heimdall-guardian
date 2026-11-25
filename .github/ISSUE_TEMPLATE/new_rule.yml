@@ -1,0 +1,46 @@
+name: New rule
+description: Propose a detection that Heimdall Guardian does not have yet.
+labels: [rules, enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Rules live in `rules/heimdall/<stack>/`. See CONTRIBUTING.md for the format; you can
+        also send the rule directly as a pull request.
+  - type: dropdown
+    id: stack
+    attributes:
+      label: Stack
+      options: [Python/Django, PHP/Laravel, .NET, Node.js/TypeScript, Dart/Flutter, Kotlin/Android, Swift, Other]
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What should it detect?
+      description: The insecure pattern and why it is a problem.
+    validations:
+      required: true
+  - type: input
+    id: cwe
+    attributes:
+      label: CWE and OWASP Top 10:2025 category
+      placeholder: CWE-89, A05:2025 Injection
+  - type: textarea
+    id: positive
+    attributes:
+      label: Code that should be flagged
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: negative
+    attributes:
+      label: Similar code that should not be flagged
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: fix
+    attributes:
+      label: Recommended fix

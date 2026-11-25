@@ -1,0 +1,39 @@
+rules:
+  - id: KT-WEB-001
+    languages: [kotlin]
+    severity: ERROR
+    message: >-
+      The WebView exposes an application object to the page's JavaScript
+      (addJavascriptInterface). If the page loads third-party content, or if
+      the WebView follows links, a malicious script can invoke the methods
+      annotated with @JavascriptInterface and reach native application
+      functions.
+    metadata:
+      cwe: "CWE-749"
+      owasp: "A06:2025 Insecure Design"
+      severity_hdl: high
+      confidence: medium
+      title_es: "WebView con addJavascriptInterface (Kotlin/Android)"
+      title: "WebView with addJavascriptInterface (Kotlin/Android)"
+      recommendation_es: >-
+        Evitar el puente. Si es indispensable, limitar el WebView a páginas
+        propias por https (validar cada navegación en shouldOverrideUrlLoading),
+        exponer solo métodos mínimos con @JavascriptInterface, validar cada
+        argumento y no exponer datos sensibles. Para mensajería con la página,
+        preferir WebViewCompat.addWebMessageListener con orígenes permitidos.
+      recommendation: >-
+        Avoid the bridge. If it is indispensable, restrict the WebView to your
+        own pages over https (validate every navigation in
+        shouldOverrideUrlLoading), expose only minimal methods with
+        @JavascriptInterface, validate every argument and do not expose
+        sensitive data. For messaging with the page, prefer
+        WebViewCompat.addWebMessageListener with allowed origins.
+      message_es: >-
+        El WebView expone un objeto de la aplicación al JavaScript de la página
+        (addJavascriptInterface). Si la página carga contenido de un tercero, o
+        si el WebView sigue enlaces, un script malicioso puede invocar los
+        métodos anotados con @JavascriptInterface y alcanzar funciones nativas
+        de la aplicación.
+    pattern-either:
+      - pattern: $W.addJavascriptInterface(...)
+      - pattern: addJavascriptInterface(...)

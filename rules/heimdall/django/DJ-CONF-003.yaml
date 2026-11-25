@@ -1,0 +1,26 @@
+rules:
+  - id: DJ-CONF-003
+    languages: [python]
+    severity: WARNING
+    message: >-
+      Configuration open to any origin: ALLOWED_HOSTS with a wildcard or CORS
+      allowed for all origins.
+    metadata:
+      cwe: "CWE-942"
+      owasp: "A02:2025 Security Misconfiguration"
+      severity_hdl: medium
+      confidence: high
+      message_es: >-
+        Configuración abierta a cualquier origen: ALLOWED_HOSTS con comodín o
+        CORS permitido para todos los orígenes.
+      title: "ALLOWED_HOSTS or CORS open to any origin"
+      recommendation: >-
+        List the system's real domains in ALLOWED_HOSTS and in CORS_ALLOWED_ORIGINS.
+      title_es: "ALLOWED_HOSTS o CORS abiertos a cualquier origen"
+      recommendation_es: >-
+        Enumerar los dominios reales del sistema en ALLOWED_HOSTS y en
+        CORS_ALLOWED_ORIGINS.
+    pattern-either:
+      - pattern: ALLOWED_HOSTS = [..., "*", ...]
+      - pattern: CORS_ALLOW_ALL_ORIGINS = True
+      - pattern: CORS_ORIGIN_ALLOW_ALL = True

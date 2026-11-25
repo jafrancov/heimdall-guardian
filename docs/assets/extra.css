@@ -1,0 +1,25 @@
+/* Heimdall palette: night black and gold (see core/palette.py). */
+:root,
+[data-md-color-scheme="default"] {
+  --md-primary-fg-color: #02040a;
+  --md-primary-fg-color--light: #1c1a17;
+  --md-primary-fg-color--dark: #02040a;
+  --md-primary-bg-color: #f2b23a;
+  --md-primary-bg-color--light: #f2b23a;
+  --md-accent-fg-color: #8a5412;
+  --md-typeset-a-color: #8a5412;
+}
+
+[data-md-color-scheme="slate"] {
+  --md-default-bg-color: #02040a;
+  --md-default-bg-color--light: #0b0d14;
+  --md-primary-fg-color: #02040a;
+  --md-primary-bg-color: #f2b23a;
+  --md-accent-fg-color: #f2b23a;
+  --md-typeset-a-color: #f2b23a;
+  --md-footer-bg-color: #02040a;
+}
+
+.md-header__button.md-logo img {
+  height: 1.6rem;
+}

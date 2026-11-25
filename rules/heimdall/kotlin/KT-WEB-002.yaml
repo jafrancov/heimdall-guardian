@@ -1,0 +1,47 @@
+rules:
+  - id: KT-WEB-002
+    languages: [regex]
+    severity: WARNING
+    message: >-
+      WebView configuration that widens what a page can do: access to local
+      files (allowFileAccess, allowFileAccessFromFileURLs,
+      allowUniversalAccessFromFileURLs) or loading an address that arrives
+      in an Intent. A malicious HTML file saved in the application or an
+      Intent from another application can read the app's own files or open
+      attacker-controlled pages.
+    metadata:
+      cwe: "CWE-749"
+      owasp: "A06:2025 Insecure Design"
+      severity_hdl: medium
+      confidence: low
+      title_es: "WebView con acceso a archivos locales o dirección tomada de un Intent (Kotlin/Android)"
+      title: "WebView with local file access or an address taken from an Intent (Kotlin/Android)"
+      recommendation_es: >-
+        Dejar allowFileAccess, allowFileAccessFromFileURLs y
+        allowUniversalAccessFromFileURLs en false y servir el contenido local
+        con WebViewAssetLoader. Antes de llamar a loadUrl con un dato de un
+        Intent, validar esquema https y que el host esté en una lista
+        permitida.
+      recommendation: >-
+        Leave allowFileAccess, allowFileAccessFromFileURLs and
+        allowUniversalAccessFromFileURLs set to false and serve local content
+        with WebViewAssetLoader. Before calling loadUrl with data from an
+        Intent, validate the https scheme and that the host is on an
+        allowlist.
+      message_es: >-
+        Configuración del WebView que amplía lo que puede hacer una página:
+        acceso a archivos locales (allowFileAccess, allowFileAccessFromFileURLs,
+        allowUniversalAccessFromFileURLs) o carga de una dirección que llega en
+        un Intent. Un HTML malicioso guardado en la aplicación o un Intent de
+        otra aplicación pueden leer archivos propios o abrir páginas
+        controladas por un atacante.
+    paths:
+      include:
+        - "*.kt"
+    pattern-either:
+      - pattern-regex: >-
+          (?m)^(?![ \t]*//)[^\n]*?\b(?:setAllowFileAccessFromFileURLs|setAllowUniversalAccessFromFileURLs|setAllowFileAccess)\(\s*true\s*\)
+      - pattern-regex: >-
+          (?m)^(?![ \t]*//)[^\n]*?\b(?:allowFileAccessFromFileURLs|allowUniversalAccessFromFileURLs|allowFileAccess)\s*=\s*true\b
+      - pattern-regex: >-
+          (?m)^(?![ \t]*//)[^\n]*?\bloadUrl\(\s*(?:requireActivity\(\)\.|activity\??\.|this\.)?(?:intent|getIntent\(\))\??\.(?:data|dataString|getStringExtra|getDataString|extras|getData)\b

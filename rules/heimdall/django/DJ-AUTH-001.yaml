@@ -1,0 +1,69 @@
+rules:
+  - id: DJ-AUTH-001
+    languages: [python]
+    severity: ERROR
+    message: >-
+      Function-based view without an authentication or permission decorator. If it
+      is published in urls.py, anyone can call it without logging in.
+    metadata:
+      cwe: "CWE-306"
+      owasp: "A01:2025 Broken Access Control"
+      severity_hdl: high
+      confidence: low
+      message_es: >-
+        Vista basada en función sin decorador de autenticación ni de permisos.
+        Si está publicada en urls.py, cualquier persona puede invocarla sin
+        iniciar sesión.
+      title: "View without authentication (Django, FBV)"
+      recommendation: >-
+        Add @login_required or @permission_required. If the view must be public (for
+        example, the login page), document it and accept the finding with a
+        justification.
+      title_es: "Vista sin autenticación (Django, FBV)"
+      recommendation_es: >-
+        Agregar @login_required o @permission_required. Si la vista debe ser
+        pública (por ejemplo, el inicio de sesión), documentarlo y aceptar el
+        hallazgo con justificación.
+    paths:
+      include:
+        - "views.py"
+        - "views_*.py"
+        - "*_views.py"
+        - "**/views/*.py"
+    patterns:
+      - pattern: |
+          def $F(request, ...):
+              ...
+      - pattern-not: |
+          @login_required
+          def $F(...):
+              ...
+      - pattern-not: |
+          @staff_member_required
+          def $F(...):
+              ...
+      - pattern-not: |
+          @superuser_required
+          def $F(...):
+              ...
+      - pattern-not: |
+          @login_required(...)
+          def $F(...):
+              ...
+      - pattern-not: |
+          @permission_required(...)
+          def $F(...):
+              ...
+      - pattern-not: |
+          @user_passes_test(...)
+          def $F(...):
+              ...
+      - pattern-not: |
+          @staff_member_required(...)
+          def $F(...):
+              ...
+      - pattern-not: |
+          @api_view(...)
+          def $F(...):
+              ...
+      - focus-metavariable: $F

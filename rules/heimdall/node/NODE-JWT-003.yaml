@@ -1,0 +1,100 @@
+rules:
+  - id: NODE-JWT-003
+    languages: [javascript, typescript]
+    severity: WARNING
+    message: >-
+      A JWT is decoded without verifying its signature in the same function.
+      decode only reads the content: anyone can forge a token that says
+      whatever they want.
+    metadata:
+      cwe: "CWE-345"
+      owasp: "A07:2025 Authentication Failures"
+      severity_hdl: medium
+      confidence: low
+      title_es: "Token JWT decodificado sin verificar la firma (Node.js)"
+      title: "JWT decoded without verifying the signature (Node.js)"
+      recommendation_es: >-
+        Usar jwt.verify (o jwtService.verify) para decidir si la persona está
+        autenticada y para leer sus datos; reservar decode para información que
+        no se use en decisiones de seguridad.
+      recommendation: >-
+        Use jwt.verify (or jwtService.verify) to decide whether the user is
+        authenticated and to read their data; reserve decode for information
+        not used in security decisions.
+      message_es: >-
+        Se decodifica un token JWT sin verificar su firma en la misma función.
+        decode solo lee el contenido: cualquiera puede fabricar un token que
+        diga lo que quiera.
+    patterns:
+      - pattern: $J.decode(...)
+      - metavariable-regex:
+          metavariable: $J
+          regex: ^(?:.*\.)?(jwt|jsonwebtoken|jsonWebToken|jwtService|jwtSvc)$
+      - pattern-not-inside: |
+          function $F(...) {
+            ...
+            $V.verify(...)
+            ...
+          }
+      - pattern-not-inside: |
+          function $F(...) {
+            ...
+            $V.verifyAsync(...)
+            ...
+          }
+      - pattern-not-inside: |
+          function (...) {
+            ...
+            $V.verify(...)
+            ...
+          }
+      - pattern-not-inside: |
+          function (...) {
+            ...
+            $V.verifyAsync(...)
+            ...
+          }
+      - pattern-not-inside: |
+          ($...A) => {
+            ...
+            $V.verify(...)
+            ...
+          }
+      - pattern-not-inside: |
+          ($...A) => {
+            ...
+            $V.verifyAsync(...)
+            ...
+          }
+      - pattern-not-inside: |
+          class $C {
+            $M(...) {
+            ...
+            $V.verify(...)
+            ...
+            }
+          }
+      - pattern-not-inside: |
+          class $C {
+            $M(...) {
+            ...
+            $V.verifyAsync(...)
+            ...
+            }
+          }
+      - pattern-not-inside: |
+          class $C {
+            async $M(...) {
+            ...
+            $V.verify(...)
+            ...
+            }
+          }
+      - pattern-not-inside: |
+          class $C {
+            async $M(...) {
+            ...
+            $V.verifyAsync(...)
+            ...
+            }
+          }

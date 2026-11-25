@@ -1,0 +1,39 @@
+rules:
+  - id: NET-AUTH-002
+    languages: [csharp]
+    severity: ERROR
+    message: >-
+      Write action (POST, PUT, PATCH or DELETE) marked with [AllowAnonymous]:
+      anyone can modify data without authenticating.
+    metadata:
+      cwe: "CWE-306"
+      owasp: "A01:2025 Broken Access Control"
+      severity_hdl: high
+      confidence: high
+      message_es: >-
+        Acción de escritura (POST, PUT, PATCH o DELETE) marcada con
+        [AllowAnonymous]: cualquiera puede modificar datos sin autenticarse.
+      title: "Anonymous write action ([AllowAnonymous])"
+      recommendation: >-
+        Remove [AllowAnonymous] and require authentication. If it must be public
+        (for example, login), document it and accept the finding with a
+        justification.
+      title_es: "Acción de escritura anónima ([AllowAnonymous])"
+      recommendation_es: >-
+        Quitar [AllowAnonymous] y exigir autenticación. Si debe ser pública
+        (por ejemplo, el inicio de sesión), documentarlo y aceptar el hallazgo
+        con justificación.
+    patterns:
+      - pattern-either:
+          - pattern: |
+              [AllowAnonymous]
+              [$HTTP]
+              $T $M(...) { ... }
+          - pattern: |
+              [AllowAnonymous]
+              [$HTTP(...)]
+              $T $M(...) { ... }
+      - metavariable-regex:
+          metavariable: $HTTP
+          regex: ^Http(Post|Put|Patch|Delete)$
+      - focus-metavariable: $M

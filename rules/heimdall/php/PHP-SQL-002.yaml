@@ -1,0 +1,76 @@
+rules:
+  - id: PHP-SQL-002
+    languages: [php]
+    severity: ERROR
+    mode: taint
+    message: >-
+      A parameter of this function or method reaches the SQL text without a cast
+      or escaping. Whoever calls it with request data (often a controller) opens
+      SQL injection.
+    metadata:
+      cwe: "CWE-89"
+      owasp: "A05:2025 Injection"
+      severity_hdl: high
+      confidence: medium
+      message_es: >-
+        Un parámetro de esta función o método llega al texto SQL sin conversión
+        ni escape. Quien la llame con datos de la petición (a menudo un
+        controlador) abre una inyección SQL.
+      title: "SQL injection through a function parameter (PHP)"
+      recommendation: >-
+        Use prepared statements with bound parameters ($stmt = $db->prepare(...);
+        $stmt->bind_param(...)). If you must build the text, cast numbers with
+        (int) and escape strings with the driver's function.
+      title_es: "Inyección SQL a través de un parámetro de función (PHP)"
+      recommendation_es: >-
+        Usa sentencias preparadas con parámetros enlazados ($stmt =
+        $db->prepare(...); $stmt->bind_param(...)). Si debes armar el texto,
+        convierte los números con (int) y escapa las cadenas con la función del
+        controlador de la base de datos.
+    pattern-sources:
+      - patterns:
+          - pattern: |
+              function $F(..., $P, ...) { ... }
+          - focus-metavariable: $P
+    pattern-sanitizers:
+      - pattern: intval(...)
+      - pattern: floatval(...)
+      - pattern: doubleval(...)
+      - pattern: array_map('intval', ...)
+      - pattern: array_map('floatval', ...)
+      - pattern: array_map("intval", ...)
+      - pattern: (int) $X
+      - pattern: (float) $X
+      - pattern: (bool) $X
+      - pattern: number_format(...)
+      - pattern: date(...)
+      - pattern: mysqli_real_escape_string(...)
+      - pattern: mysql_real_escape_string(...)
+      - pattern: pg_escape_string(...)
+      - pattern: pg_escape_literal(...)
+      - pattern: pg_escape_identifier(...)
+      - pattern: addslashes(...)
+      - pattern: $DB->quote(...)
+      - pattern: $DB->real_escape_string(...)
+      - patterns:
+          - pattern: $OBJ->$M(...)
+          - metavariable-regex:
+              metavariable: $M
+              regex: ^(?:.*[^A-Za-z])?[eE]sc|.*[a-z]Esc|(?i:.*(?:escape|quote|sanitiz))
+      - patterns:
+          - pattern: $FN(...)
+          - metavariable-regex:
+              metavariable: $FN
+              regex: ^(?:.*[^A-Za-z])?[eE]sc|.*[a-z]Esc|(?i:.*(?:escape|quote|sanitiz))
+    pattern-sinks:
+      - patterns:
+          - pattern-either:
+              - pattern: mysqli_query($C, $Q, ...)
+              - pattern: mysql_query($Q, ...)
+              - pattern: pg_query($C, $Q)
+              - pattern: sqlsrv_query($C, $Q, ...)
+              - pattern: odbc_exec($C, $Q)
+              - pattern: $DB->query($Q, ...)
+              - pattern: $DB->exec($Q)
+              - pattern: $DB->multi_query($Q)
+          - focus-metavariable: $Q

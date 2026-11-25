@@ -1,0 +1,35 @@
+rules:
+  - id: NODE-CAND-002
+    languages: [javascript, typescript]
+    severity: INFO
+    message: >-
+      A system command is run with a value that is not a constant. It is only a point to review: the local AI checks whether untrusted input reaches it.
+    metadata:
+      candidate_kind: exec
+      cwe: "CWE-78"
+      owasp: "A05:2025 Injection"
+      severity_hdl: medium
+      confidence: low
+      message_es: >-
+        Se ejecuta un comando del sistema con un valor que no es constante. Es solo un punto por revisar: la IA local comprueba si le llega entrada no confiable.
+      title: "Command built from a variable (to review)"
+      recommendation: >-
+        Avoid the shell; pass the program and its arguments as a list and validate every value against an allow list.
+      title_es: "Comando armado con una variable (por revisar)"
+      recommendation_es: >-
+        Evita el shell; pasa el programa y sus argumentos como lista y valida cada valor contra una lista permitida.
+    patterns:
+      - pattern-either:
+          - pattern: $CP.exec($X, ...)
+          - pattern: $CP.execSync($X, ...)
+          - pattern: exec($X, ...)
+          - pattern: execSync($X, ...)
+          - pattern: '$CP.spawn($C, $ARGS, { ..., shell: true, ... })'
+          - pattern: 'spawn($C, $ARGS, { ..., shell: true, ... })'
+      - pattern-not: $CP.exec("...", ...)
+      - pattern-not: $CP.execSync("...", ...)
+      - pattern-not: exec("...", ...)
+      - pattern-not: execSync("...", ...)
+      - pattern-not: $CP.spawn("...", ...)
+      - pattern-not: spawn("...", ...)
+      - pattern-not: $CP.exec(`...`, ...)

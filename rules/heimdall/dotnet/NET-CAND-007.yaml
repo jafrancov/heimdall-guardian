@@ -1,0 +1,36 @@
+rules:
+  - id: NET-CAND-007
+    languages: [csharp]
+    severity: INFO
+    message: >-
+      An XML document is parsed from a value that is not a constant. It is only a point to review: the local AI checks whether untrusted input reaches it.
+    metadata:
+      candidate_kind: xxe
+      cwe: "CWE-611"
+      owasp: "A02:2025 Security Misconfiguration"
+      severity_hdl: medium
+      confidence: low
+      message_es: >-
+        Se analiza un documento XML a partir de un valor que no es constante. Es solo un punto por revisar: la IA local comprueba si le llega entrada no confiable.
+      title: "XML parsed from a variable (to review)"
+      recommendation: >-
+        Disable DTDs and external entities in the XML parser, or use a parser configured to refuse them.
+      title_es: "XML analizado desde una variable (por revisar)"
+      recommendation_es: >-
+        Desactiva los DTD y las entidades externas en el analizador XML, o usa uno configurado para rechazarlos.
+    patterns:
+      - pattern-either:
+          - patterns:
+              - pattern-either:
+                  - pattern: $DOC.LoadXml($X)
+                  - pattern: $DOC.Load($X)
+              - metavariable-regex:
+                  metavariable: $DOC
+                  regex: (?i)doc|xml|dom
+          - pattern: XmlReader.Create($X, ...)
+          - pattern: new XmlTextReader($X)
+          - pattern: XDocument.Load($X, ...)
+          - pattern: XElement.Load($X, ...)
+      - metavariable-regex:
+          metavariable: $X
+          regex: ^(?!\s*@?"(?:[^"\\]|\\.)*"\s*$)

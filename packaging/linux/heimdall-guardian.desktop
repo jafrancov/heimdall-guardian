@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Heimdall Guardian
+GenericName=Static security analysis
+Comment=Local, read-only static security analysis of source code
+Exec=heimdall-guardian
+Icon=heimdall-guardian
+Terminal=false
+Categories=Development;Security;
+Keywords=security;sast;audit;
+StartupWMClass=heimdall_guardian

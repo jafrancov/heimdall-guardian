@@ -1,0 +1,99 @@
+rules:
+  - id: NODE-SQL-001
+    languages: [javascript, typescript]
+    severity: ERROR
+    mode: taint
+    message: >-
+      Request data (req.query, req.body, req.params, headers or NestJS
+      parameters) reaches an SQL query built by concatenation or a template
+      string: this allows SQL injection.
+    metadata:
+      cwe: "CWE-89"
+      owasp: "A05:2025 Injection"
+      severity_hdl: critical
+      confidence: high
+      title_es: "Inyección SQL con datos de la petición (Node.js)"
+      title: "SQL injection with request data (Node.js)"
+      recommendation_es: >-
+        Usar consultas parametrizadas: db.query('SELECT ... WHERE id = $1',
+        [id]) o db.query('... WHERE id = ?', [id]); con Prisma, $queryRaw como
+        plantilla etiquetada; con Sequelize, replacements o bind; con Knex,
+        bindings o el constructor de consultas. Nunca interpolar valores en el
+        texto de la consulta.
+      recommendation: >-
+        Use parameterized queries: db.query('SELECT ... WHERE id = $1', [id])
+        or db.query('... WHERE id = ?', [id]); with Prisma, $queryRaw as a
+        tagged template; with Sequelize, replacements or bind; with Knex,
+        bindings or the query builder. Never interpolate values into the query
+        text.
+      message_es: >-
+        Datos de la petición (req.query, req.body, req.params, cabeceras o
+        parámetros de NestJS) llegan a una consulta SQL construida con
+        concatenación o plantilla: permite inyección SQL.
+    pattern-sources:
+      - pattern: req.query
+      - pattern: req.body
+      - pattern: req.params
+      - pattern: req.headers
+      - pattern: req.cookies
+      - pattern: req.signedCookies
+      - pattern: req.get(...)
+      - pattern: req.header(...)
+      - pattern: request.query
+      - pattern: request.body
+      - pattern: request.params
+      - pattern: request.headers
+      - pattern: request.cookies
+      - pattern: ctx.query
+      - pattern: ctx.params
+      - pattern: ctx.request.body
+      - pattern: ctx.request.query
+      - patterns:
+          - pattern: |
+              class $C { $M(..., @$DEC(...) $X, ...) {...} }
+          - metavariable-regex:
+              metavariable: $DEC
+              regex: ^(Query|Body|Param|Headers|Cookies)$
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., ParseIntPipe, ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., new ParseIntPipe(...), ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., ParseFloatPipe, ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., new ParseFloatPipe(...), ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., ParseBoolPipe, ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., new ParseBoolPipe(...), ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., ParseUUIDPipe, ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., new ParseUUIDPipe(...), ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., ParseEnumPipe(...), ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., new ParseEnumPipe(...), ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., ParseDatePipe, ...) $X, ...) {...} }
+          - pattern-not: |
+              class $C { $M(..., @$DEC(..., new ParseDatePipe(...), ...) $X, ...) {...} }
+          - focus-metavariable: $X
+    pattern-sanitizers:
+      - pattern: parseInt(...)
+      - pattern: parseFloat(...)
+      - pattern: Number(...)
+      - pattern: Number.parseInt(...)
+      - pattern: Math.floor(...)
+      - pattern: $C.escape(...)
+      - pattern: $C.escapeId(...)
+      - pattern: SqlString.escape(...)
+      - pattern: escape(...)
+    pattern-sinks:
+      - patterns:
+          - pattern: $O.$M($Q, ...)
+          - metavariable-regex:
+              metavariable: $M
+              regex: ^(query|execute|raw|unsafe|whereRaw|orderByRaw|havingRaw|\$queryRawUnsafe|\$executeRawUnsafe)$
+          - pattern-not: $O.$M({...}, ...)
+          - focus-metavariable: $Q

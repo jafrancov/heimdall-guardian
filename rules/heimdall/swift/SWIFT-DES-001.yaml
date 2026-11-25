@@ -1,0 +1,37 @@
+rules:
+  - id: SWIFT-DES-001
+    languages: [swift]
+    severity: WARNING
+    message: >-
+      Insecure deserialization with NSKeyedUnarchiver:
+      unarchiveObject(with:) does not restrict the classes it reconstructs,
+      and requiresSecureCoding set to false explicitly allows it. Tampered
+      data (a shared file, a backup, the clipboard) can instantiate
+      unexpected classes and alter the application's behavior.
+    metadata:
+      cwe: "CWE-502"
+      owasp: "A08:2025 Software or Data Integrity Failures"
+      severity_hdl: medium
+      confidence: high
+      title_es: "Deserialización sin restricción de clases con NSKeyedUnarchiver (Swift/iOS)"
+      title: "Deserialization without class restriction using NSKeyedUnarchiver (Swift/iOS)"
+      recommendation_es: >-
+        Usar NSKeyedUnarchiver.unarchivedObject(ofClass:from:) o
+        unarchivedObject(ofClasses:from:) con la lista mínima de clases
+        permitidas, y mantener requiresSecureCoding en true. Para datos
+        propios, preferir Codable con JSONDecoder.
+      recommendation: >-
+        Use NSKeyedUnarchiver.unarchivedObject(ofClass:from:) or
+        unarchivedObject(ofClasses:from:) with the minimum list of allowed
+        classes, and keep requiresSecureCoding set to true. For your own data,
+        prefer Codable with JSONDecoder.
+      message_es: >-
+        Deserialización insegura con NSKeyedUnarchiver: unarchiveObject(with:) no
+        restringe las clases que reconstruye, y requiresSecureCoding en false lo
+        permite explícitamente. Datos manipulados (un archivo compartido, un
+        respaldo, un portapapeles) pueden instanciar clases inesperadas y
+        alterar el comportamiento de la aplicación.
+    pattern-either:
+      - pattern: NSKeyedUnarchiver.unarchiveObject(...)
+      - pattern: NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(...)
+      - pattern: $U.requiresSecureCoding = false

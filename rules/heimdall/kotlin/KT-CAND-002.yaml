@@ -1,0 +1,28 @@
+rules:
+  - id: KT-CAND-002
+    languages: [regex]
+    severity: INFO
+    message: >-
+      A system command is run with a value that is not a constant. It is only a point to review: the local AI checks whether untrusted input reaches it.
+    metadata:
+      candidate_kind: exec
+      cwe: "CWE-78"
+      owasp: "A05:2025 Injection"
+      severity_hdl: medium
+      confidence: low
+      message_es: >-
+        Se ejecuta un comando del sistema con un valor que no es constante. Es solo un punto por revisar: la IA local comprueba si le llega entrada no confiable.
+      title: "Command built from a variable (to review)"
+      recommendation: >-
+        Avoid the shell; pass the program and its arguments as a list and validate every value against an allow list.
+      title_es: "Comando armado con una variable (por revisar)"
+      recommendation_es: >-
+        Evita el shell; pasa el programa y sus argumentos como lista y valida cada valor contra una lista permitida.
+    paths:
+      include:
+        - "*.kt"
+    pattern-either:
+      - pattern-regex: >-
+          (?m)^(?![ \t]*//)[^\n]*?\bRuntime\.getRuntime\(\)\s*\.exec\(\s*(?!(?:(?:arrayOf|listOf)\(\s*(?:"[^"$\\\n]*"\s*,\s*)*"[^"$\\\n]*"\s*\)|"[^"$\\\n]*")\s*[,)])[^\s)]
+      - pattern-regex: >-
+          (?m)^(?![ \t]*//)[^\n]*?(?<![\w.])ProcessBuilder\(\s*(?!(?:(?:arrayOf|listOf)\(\s*(?:"[^"$\\\n]*"\s*,\s*)*"[^"$\\\n]*"\s*\)|"[^"$\\\n]*")\s*[,)])[^\s)]

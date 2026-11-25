@@ -1,0 +1,26 @@
+rules:
+  - id: SWIFT-CAND-001
+    languages: [regex]
+    severity: INFO
+    message: >-
+      A SQL query is built by joining or interpolating a variable. It is only a point to review: the local AI checks whether untrusted input reaches it.
+    metadata:
+      candidate_kind: sql
+      cwe: "CWE-89"
+      owasp: "A05:2025 Injection"
+      severity_hdl: medium
+      confidence: low
+      message_es: >-
+        Una consulta SQL se arma uniendo o interpolando una variable. Es solo un punto por revisar: la IA local comprueba si le llega entrada no confiable.
+      title: "SQL built from a variable (to review)"
+      recommendation: >-
+        Use parameterized queries and never put values into the query text.
+      title_es: "SQL armado con una variable (por revisar)"
+      recommendation_es: >-
+        Usa consultas parametrizadas y nunca pongas valores en el texto de la consulta.
+    paths:
+      include:
+        - "*.swift"
+    pattern-either:
+      - pattern-regex: >-
+          (?m)^(?![ \t]*//)[^\n]*?\bsqlite3_(?:exec|prepare_v2)\([^,\n]+,\s*(?:(?!")\S|"(?:[^"\\\n]|\\[^(\n])*?\\\(|"(?:[^"\\\n]|\\.)*"\s*\+)

@@ -1,0 +1,65 @@
+rules:
+  - id: KT-CONF-001
+    languages: [regex]
+    severity: WARNING
+    message: >-
+      Exported Android component without permission: an activity, service,
+      receiver or provider with android:exported="true" and no
+      android:permission can be invoked by any installed application; a
+      provider with grantUriPermissions="true" also lets access to its data
+      be granted by URI. Allowed cleartext http traffic in
+      network_security_config.xml is also flagged.
+    metadata:
+      cwe: "CWE-926"
+      owasp: "A02:2025 Security Misconfiguration"
+      severity_hdl: medium
+      confidence: low
+      title_es: "Componente exportado sin permiso o tráfico http permitido (AndroidManifest.xml)"
+      title: "Exported component without permission or http traffic allowed (AndroidManifest.xml)"
+      recommendation_es: >-
+        Declarar android:exported="false" salvo que el componente deba recibir
+        llamadas de otras aplicaciones; en ese caso exigir un android:permission
+        de firma (signature), validar cada Intent recibido y no confiar en sus
+        datos. Los proveedores de archivos deben ser FileProvider con
+        exported="false" y grantUriPermissions="true". En
+        network_security_config.xml, permitir http solo para dominios de
+        desarrollo concretos y nunca en base-config.
+      recommendation: >-
+        Declare android:exported="false" unless the component must receive
+        calls from other applications; in that case require a signature-level
+        android:permission, validate every Intent received and do not trust
+        its data. File providers must be FileProvider with exported="false"
+        and grantUriPermissions="true". In network_security_config.xml, allow
+        http only for specific development domains and never in base-config.
+      message_es: >-
+        Componente de Android exportado sin permiso: una actividad, servicio,
+        receptor o proveedor con android:exported="true" y sin android:permission
+        puede ser invocado por cualquier aplicación instalada; un proveedor con
+        grantUriPermissions="true" permite además dar acceso a sus datos por
+        URI. También se marca el tráfico http sin cifrar permitido en
+        network_security_config.xml.
+    paths:
+      include:
+        - "AndroidManifest.xml"
+        - "network_security_config.xml"
+      exclude:
+        - "**/src/debug/**"
+        - "**/src/profile/**"
+        - "**/src/androidTest/**"
+    pattern-either:
+      - pattern-regex: >-
+          <(?:activity|activity-alias)\b(?![^>]*android:permission)(?=[^>]*android:exported\s*=\s*"true")[^>]*[^/>]>(?:(?!android\.intent\.action\.MAIN|android\.intent\.category\.LAUNCHER|</activity)[\s\S])*?</activity(?:-alias)?>
+      - pattern-regex: >-
+          <(?:service|provider)\b(?![^>]*android:permission)(?=[^>]*android:exported\s*=\s*"true")[^>]*>
+      - pattern-regex: >-
+          <receiver\b(?![^>]*android:permission)(?=[^>]*android:exported\s*=\s*"true")[^>]*[^/>]>(?:(?!BOOT_COMPLETED|</receiver)[\s\S])*?</receiver>
+      - pattern-regex: >-
+          <receiver\b(?![^>]*android:permission)(?=[^>]*android:exported\s*=\s*"true")[^>]*/>
+      - pattern-regex: >-
+          <(?:activity|activity-alias)\b(?![^>]*android:permission)(?=[^>]*android:exported\s*=\s*"true")[^>]*/>
+      - pattern-regex: >-
+          <provider\b(?=[^>]*android:permission)(?=[^>]*android:exported\s*=\s*"true")(?=[^>]*android:grantUriPermissions\s*=\s*"true")[^>]*>
+      - pattern-regex: >-
+          <base-config\b[^>]*cleartextTrafficPermitted\s*=\s*"true"[^>]*>
+      - pattern-regex: >-
+          <domain-config\b[^>]*cleartextTrafficPermitted\s*=\s*"true"[^>]*>(?!\s*<domain\b[^>]*>\s*(?:localhost|10\.0\.2\.2|127\.0\.0\.1)\s*<)

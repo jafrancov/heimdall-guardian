@@ -1,0 +1,50 @@
+rules:
+  - id: DART-TLS-001
+    languages: [dart]
+    severity: ERROR
+    message: >-
+      Certificate validation disabled: the callback that decides what to do
+      with an invalid certificate always answers yes. Anyone on the network
+      (a public Wi-Fi, for example) can impersonate the server and read or
+      modify the traffic.
+    metadata:
+      cwe: "CWE-295"
+      owasp: "A04:2025 Cryptographic Failures"
+      severity_hdl: high
+      confidence: high
+      title_es: "Validación de certificados TLS desactivada (Dart/Flutter)"
+      title: "TLS certificate validation disabled (Dart/Flutter)"
+      recommendation_es: >-
+        Eliminar el callback (badCertificateCallback, onBadCertificate o
+        validateCertificate que devuelve true) y dejar que la plataforma valide
+        la cadena. Si hace falta confiar en una CA propia, agregarla con
+        SecurityContext.setTrustedCertificatesBytes o fijar el certificado
+        (pinning) comparando su huella, nunca aceptar todo.
+      recommendation: >-
+        Remove the callback (badCertificateCallback, onBadCertificate or
+        validateCertificate returning true) and let the platform validate the
+        chain. If you need to trust your own CA, add it with
+        SecurityContext.setTrustedCertificatesBytes or pin the certificate by
+        comparing its fingerprint; never accept everything.
+      message_es: >-
+        Validación de certificados desactivada: el callback que decide qué hacer
+        con un certificado inválido siempre responde que sí. Cualquiera en la red
+        (una wifi pública, por ejemplo) puede hacerse pasar por el servidor y leer
+        o modificar el tráfico.
+    pattern-either:
+      - pattern: $C.badCertificateCallback = (...) => true
+      - pattern: |
+          $C.badCertificateCallback = (...) { return true; }
+      - pattern: |
+          $C.badCertificateCallback = (...) { ...; return true; }
+      - pattern: $C.badCertificateCallback = ((...) => true)
+      - pattern: |
+          $C.badCertificateCallback = ((...) { return true; })
+      - pattern: |
+          $F(..., onBadCertificate: (...) => true, ...)
+      - pattern: |
+          $F(..., onBadCertificate: (...) { return true; }, ...)
+      - pattern: |
+          IOHttpClientAdapter(..., validateCertificate: (...) => true, ...)
+      - pattern: |
+          IOHttpClientAdapter(..., validateCertificate: (...) { return true; }, ...)

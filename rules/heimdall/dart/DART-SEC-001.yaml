@@ -1,0 +1,38 @@
+rules:
+  - id: DART-SEC-001
+    languages: [regex]
+    severity: ERROR
+    message: >-
+      Hard-coded secret: a variable named like an API key, secret, token or
+      password is assigned a fixed string. Anyone who has the application
+      (the IPA or APK can be decompiled in minutes) or the repository can
+      extract it.
+    metadata:
+      cwe: "CWE-798"
+      owasp: "A07:2025 Authentication Failures"
+      severity_hdl: high
+      confidence: medium
+      title_es: "Llave de API, secreto o contraseña escrita en el código (Dart/Flutter)"
+      title: "Hard-coded API key, secret or password (Dart/Flutter)"
+      recommendation_es: >-
+        Quitar el valor del código y rotarlo si ya se publicó. Un secreto de
+        servidor no debe viajar en la aplicación: usar un servicio propio que
+        lo guarde. Si es una llave pública de cliente, restringirla en el
+        proveedor por paquete y huella, y pasarla con --dart-define o un
+        archivo fuera del repositorio.
+      recommendation: >-
+        Remove the value from the code and rotate it if it was already
+        published. A server secret must not ship in the application: use your
+        own service that stores it. If it is a public client key, restrict it
+        at the provider by package and fingerprint, and pass it with
+        --dart-define or a file outside the repository.
+      message_es: >-
+        Secreto escrito en el código: una variable con nombre de llave de API,
+        secreto, token o contraseña recibe un texto fijo. Quien tenga la
+        aplicación (el IPA o el APK se descompilan en minutos) o el repositorio
+        puede extraerlo.
+    paths:
+      include:
+        - "*.dart"
+    pattern-regex: >-
+      (?m)^(?![ \t]*//)[^\n]*?(?i)\b(?!\w*(?:label|hint|text|title|type|url|path|field|header|name|storage|prefs|route|regex|pattern|error|message))_?[a-z0-9_]*(?:api_?key|secret|passw(?:or)?d|pwd|token|private_?key)[a-z0-9_]*\s*[:=]\s*r?(["\x27])(?!(?:(?-i:[a-z]+(?:_[a-z]+)+|[A-Z]+(?:_[A-Z]+)+)\1)|[^"\x27]*(?:change_?me|your|xxx|example|todo|placeholder|<|\.\.\.))[^\s"\x27$\\]{8,}\1

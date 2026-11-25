@@ -1,0 +1,124 @@
+rules:
+  - id: PHP-UPL-001
+    languages: [php]
+    severity: ERROR
+    mode: taint
+    message: >-
+      An uploaded file is stored under a path built from data the client controls (the
+      original file name, the extension, a form field or the name of the upload field).
+      The visitor decides the name and the folder, so a script can end up in a folder
+      where the web server runs PHP, and an existing file can be overwritten.
+    metadata:
+      cwe: "CWE-434"
+      owasp: "A06:2025 Insecure Design"
+      severity_hdl: critical
+      confidence: medium
+      message_es: >-
+        Un archivo subido se guarda en una ruta construida con datos que controla el
+        cliente (el nombre original del archivo, la extensión, un campo del formulario
+        o el nombre del campo de carga). El visitante decide el nombre y la carpeta,
+        así que un script puede terminar en una carpeta donde el servidor web ejecuta
+        PHP, y se puede sobrescribir un archivo existente.
+      title: "Uploaded file stored under a client-controlled path (PHP)"
+      recommendation: >-
+        Generate the stored name on the server (for example random_bytes) and derive the
+        extension from an allowlist, not from the original name. Check the extension and
+        the real MIME type against an allowlist before moving the file, and store it
+        outside the web root or in a folder where PHP does not run. If the folder comes
+        from the request, pick it from a fixed list or check with realpath() that it stays
+        inside the upload root.
+      title_es: "Archivo subido guardado en una ruta controlada por el cliente (PHP)"
+      recommendation_es: >-
+        Generar el nombre guardado en el servidor (por ejemplo con random_bytes) y
+        obtener la extensión de una lista blanca, no del nombre original. Validar la
+        extensión y el tipo MIME real contra una lista blanca antes de mover el archivo,
+        y guardarlo fuera de la raíz web o en una carpeta donde PHP no se ejecute. Si
+        la carpeta viene de la petición, elegirla de una lista fija o comprobar con
+        realpath() que queda dentro de la raíz de cargas.
+    pattern-sources:
+      - pattern: $_FILES[...]
+      - pattern: $_POST
+      - pattern: $_GET
+      - pattern: $_REQUEST
+      # The name of the upload field: foreach ($_FILES as $key => $file)
+      - patterns:
+          - pattern: |
+              foreach ($_FILES as $KEY => $VAL) { ... }
+          - focus-metavariable: $KEY
+    pattern-sanitizers:
+      # Numeric or hashed values cannot carry a path or an extension.
+      - pattern: intval(...)
+      - pattern: (int) $X
+      - pattern: md5(...)
+      - pattern: sha1(...)
+      - pattern: hash(...)
+      - pattern: crc32(...)
+      - pattern: ctype_digit(...)
+      # The value is stripped down to a safe character set (no dot, no separator).
+      - patterns:
+          - pattern: preg_replace($RE, ...)
+          - metavariable-regex:
+              metavariable: $RE
+              regex: ^['"]/\^?\[\^[A-Za-z0-9_-]+\]\+?/[a-z]*['"]$
+      # Allowlist or anchored check on the value; after it the value is clean when the
+      # code exits or only moves inside the positive branch.
+      - patterns:
+          - pattern: in_array($X, ...)
+          - focus-metavariable: $X
+        by-side-effect: true
+      - patterns:
+          - pattern: array_key_exists($X, ...)
+          - focus-metavariable: $X
+        by-side-effect: true
+      - patterns:
+          - pattern: preg_match($RE, $X)
+          - metavariable-regex:
+              metavariable: $RE
+              regex: ^['"]/?\^.*\$/[a-zA-Z]*['"]$
+          - focus-metavariable: $X
+        by-side-effect: true
+      # Folder constrained to the upload root.
+      - patterns:
+          - pattern-either:
+              - pattern: strpos($X, ...)
+              - pattern: strpos($X . $Y, ...)
+              - pattern: str_starts_with($X, ...)
+              - pattern: str_starts_with($X . $Y, ...)
+          - focus-metavariable: $X
+        by-side-effect: true
+    pattern-sinks:
+      - patterns:
+          - pattern-either:
+              - pattern: move_uploaded_file($S, $D, ...)
+              - pattern: copy($S, $D, ...)
+              - pattern: rename($S, $D, ...)
+          # A check that leaves the code (exit, return, throw) when the upload name is not in
+          # an allowlist, or when the folder does not stay inside the upload root. The same
+          # name is read later through an alias, so the check is matched on its own.
+          - pattern-not-inside:
+              patterns:
+                - pattern-either:
+                    - pattern: |
+                        if ($C) { ... exit; }
+                        ...
+                    - pattern: |
+                        if ($C) { ... exit(...); }
+                        ...
+                    - pattern: |
+                        if ($C) { ... die(...); }
+                        ...
+                    - pattern: |
+                        if ($C) { ... return; }
+                        ...
+                    - pattern: |
+                        if ($C) { ... return ...; }
+                        ...
+                    - pattern: |
+                        if ($C) { ... throw ...; }
+                        ...
+                - metavariable-regex:
+                    metavariable: $C
+                    regex: (?s).*(!\s*in_array\(\s*\$_FILES\[[^\]]*\]\[['"]name['"]\]|\b(strpos|stripos)\s*\(.*\)\s*!==\s*0|!\s*str_starts_with\s*\()
+          - pattern-not-inside: |
+              if (<... in_array($_FILES[...]['name'], ...) ...>) { ... }
+          - focus-metavariable: $D

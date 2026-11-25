@@ -1,0 +1,34 @@
+rules:
+  - id: KT-STO-002
+    languages: [regex]
+    severity: ERROR
+    message: >-
+      A file or preference is created with MODE_WORLD_READABLE or
+      MODE_WORLD_WRITEABLE: any other application on the device can read or
+      modify it. Modern Android throws an exception, but on older versions
+      the file is left open.
+    metadata:
+      cwe: "CWE-732"
+      owasp: "A01:2025 Broken Access Control"
+      severity_hdl: high
+      confidence: high
+      title_es: "Archivo o preferencias con permisos para otras aplicaciones (Kotlin/Android)"
+      title: "File or preferences with permissions for other applications (Kotlin/Android)"
+      recommendation_es: >-
+        Usar MODE_PRIVATE. Para compartir un archivo con otra aplicación,
+        exponerlo con un FileProvider y permisos de URI temporales, y no con
+        permisos de archivo globales.
+      recommendation: >-
+        Use MODE_PRIVATE. To share a file with another application, expose it
+        through a FileProvider with temporary URI permissions, not with global
+        file permissions.
+      message_es: >-
+        Un archivo o preferencia se crea con MODE_WORLD_READABLE o
+        MODE_WORLD_WRITEABLE: cualquier otra aplicación del dispositivo puede
+        leerlo o modificarlo. Android moderno lanza una excepción, pero en
+        versiones anteriores el archivo queda abierto.
+    paths:
+      include:
+        - "*.kt"
+    pattern-regex: >-
+      (?m)^(?![ \t]*//)[^\n]*?\bMODE_WORLD_(?:READABLE|WRITEABLE)\b

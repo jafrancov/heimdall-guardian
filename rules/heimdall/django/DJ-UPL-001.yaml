@@ -1,0 +1,28 @@
+rules:
+  - id: DJ-UPL-001
+    languages: [python]
+    severity: WARNING
+    message: >-
+      File upload field without validators. With no limit on type or size,
+      executables, HTML with scripts or files that exhaust storage can be
+      uploaded.
+    metadata:
+      cwe: "CWE-434"
+      owasp: "A06:2025 Insecure Design"
+      severity_hdl: medium
+      confidence: low
+      message_es: >-
+        Campo de carga de archivos sin validadores. Sin límite de tipo ni de
+        tamaño se pueden subir ejecutables, HTML con scripts o archivos que
+        agoten el almacenamiento.
+      title: "File upload without type or size validation"
+      recommendation: >-
+        Add validators (FileExtensionValidator and a size validator) and check the
+        real content of the file, not just its extension.
+      title_es: "Carga de archivos sin validación de tipo o tamaño"
+      recommendation_es: >-
+        Agregar validators (FileExtensionValidator y un validador de tamaño) y
+        verificar el contenido real del archivo, no solo su extensión.
+    patterns:
+      - pattern: $MOD.FileField(...)
+      - pattern-not: $MOD.FileField(..., validators=$V, ...)

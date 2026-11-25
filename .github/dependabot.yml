@@ -1,0 +1,24 @@
+# Weekly dependency updates. Patch and minor bumps arrive together in one pull request;
+# each major bump gets its own, so it can be reviewed (and, for Flet or pillow, rebuilt
+# with `make app`) on its own. `make outdated` and `make upgrade` do the same locally.
+version: 2
+updates:
+  - package-ecosystem: uv
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3
+    labels: [dependencies]
+    groups:
+      python-minor-and-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3
+    labels: [dependencies]
+    groups:
+      actions-minor-and-patch:
+        update-types: [minor, patch]

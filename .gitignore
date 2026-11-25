@@ -1,0 +1,29 @@
+__pycache__/
+*.py[cod]
+.venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+dist/
+build/
+*.egg-info/
+.DS_Store
+# Downloaded tool binaries (pinned version + checksum)
+tools/bin/
+# Corpus of reference vulnerable projects: downloaded, not versioned
+tests/corpus/
+# Outputs of local runs
+/reporte*
+.idea/
+.coverage
+htmlcov/
+# Bundled resources (tools/build_bundle.py) and build outputs
+src/heimdall_guardian/_bundle/
+src/assets/
+# Private notes of the author (design history, local agent instructions): not part of the repo.
+internal/
+CLAUDE.local.md
+site/
+# Generated at build time (depends on the Python version): see tools/build_rule_docs.py
+/docs/cli.md
+/docs/cli.es.md

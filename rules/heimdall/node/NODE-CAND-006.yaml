@@ -1,0 +1,32 @@
+rules:
+  - id: NODE-CAND-006
+    languages: [javascript, typescript]
+    severity: INFO
+    message: >-
+      Data is deserialized from a value that is not a constant. It is only a point to review: the local AI checks whether untrusted input reaches it.
+    metadata:
+      candidate_kind: deser
+      cwe: "CWE-502"
+      owasp: "A08:2025 Software or Data Integrity Failures"
+      severity_hdl: medium
+      confidence: low
+      message_es: >-
+        Se deserializan datos de un valor que no es constante. Es solo un punto por revisar: la IA local comprueba si le llega entrada no confiable.
+      title: "Deserialization of a variable (to review)"
+      recommendation: >-
+        Never deserialize untrusted data with a format that can build arbitrary objects; use a data-only format such as JSON with a fixed schema, or restrict the allowed types.
+      title_es: "Deserialización de una variable (por revisar)"
+      recommendation_es: >-
+        Nunca deserialices datos no confiables con un formato que pueda construir objetos arbitrarios; usa un formato de solo datos como JSON con un esquema fijo, o restringe los tipos permitidos.
+    patterns:
+      - pattern-either:
+          - pattern: $S.unserialize($X)
+          - pattern: v8.deserialize($X)
+          - patterns:
+              - pattern: $Y.load($X, ...)
+              - metavariable-regex:
+                  metavariable: $Y
+                  regex: ^(?:yaml|jsyaml|YAML|jsYaml|yamljs)$
+      - metavariable-regex:
+          metavariable: $X
+          regex: ^(?!\s*(?:'[^'\n]*'|"[^"\n]*"|`[^`$\n]*`)\s*$)

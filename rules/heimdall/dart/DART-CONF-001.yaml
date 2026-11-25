@@ -1,0 +1,46 @@
+rules:
+  - id: DART-CONF-001
+    languages: [regex]
+    severity: WARNING
+    message: >-
+      Insecure native configuration of the mobile app (Android or iOS):
+      cleartext http traffic allowed, debuggable application, or backup
+      enabled. Each one widens what an attacker with network or device
+      access can obtain.
+    metadata:
+      cwe: "CWE-16"
+      owasp: "A02:2025 Security Misconfiguration"
+      severity_hdl: medium
+      confidence: high
+      title_es: "Configuración insegura en AndroidManifest.xml o Info.plist"
+      title: "Insecure configuration in AndroidManifest.xml or Info.plist"
+      recommendation_es: >-
+        En AndroidManifest.xml usar usesCleartextTraffic="false" (o definir un
+        network_security_config con solo los dominios necesarios),
+        debuggable="false" y allowBackup="false" en la versión publicada. En
+        Info.plist, quitar NSAllowsArbitraryLoads y declarar excepciones solo
+        por dominio. Las pruebas locales pueden ir en android/app/src/debug.
+      recommendation: >-
+        In AndroidManifest.xml, use usesCleartextTraffic="false" (or define a
+        network_security_config with only the necessary domains),
+        debuggable="false" and allowBackup="false" in the released version. In
+        Info.plist, remove NSAllowsArbitraryLoads and declare exceptions per
+        domain only. Local testing can go in android/app/src/debug.
+      message_es: >-
+        Configuración nativa insegura de la app móvil (Android o iOS): tráfico
+        http sin cifrar permitido, aplicación depurable o copia de seguridad
+        habilitada.
+        Cada una amplía lo que un atacante con acceso a la red o al dispositivo
+        puede obtener.
+    paths:
+      include:
+        - "AndroidManifest.xml"
+        - "Info.plist"
+      exclude:
+        - "**/src/debug/**"
+        - "**/src/profile/**"
+    pattern-either:
+      - pattern-regex: android:usesCleartextTraffic\s*=\s*"true"
+      - pattern-regex: android:debuggable\s*=\s*"true"
+      - pattern-regex: android:allowBackup\s*=\s*"true"
+      - pattern-regex: <key>NSAllowsArbitraryLoads</key>\s*<true\s*/>

@@ -1,0 +1,27 @@
+rules:
+  - id: NET-CONF-003
+    languages: [csharp]
+    severity: ERROR
+    message: >-
+      CORS allows any origin together with credentials: any website can make
+      authenticated requests on behalf of the user.
+    metadata:
+      cwe: "CWE-942"
+      owasp: "A02:2025 Security Misconfiguration"
+      severity_hdl: high
+      confidence: high
+      message_es: >-
+        CORS permite cualquier origen junto con credenciales: cualquier sitio
+        web puede hacer peticiones autenticadas en nombre del usuario.
+      title: "CORS open with credentials (.NET)"
+      recommendation: >-
+        Replace AllowAnyOrigin() with WithOrigins() listing the system's real
+        domains.
+      title_es: "CORS abierto con credenciales (.NET)"
+      recommendation_es: >-
+        Sustituir AllowAnyOrigin() por WithOrigins() con los dominios reales
+        del sistema.
+    pattern-either:
+      - pattern: $B. ... .AllowAnyOrigin(). ... .AllowCredentials()
+      - pattern: $B. ... .AllowCredentials(). ... .AllowAnyOrigin()
+      - pattern: $B. ... .SetIsOriginAllowed($X => true). ... .AllowCredentials()

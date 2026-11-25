@@ -1,0 +1,35 @@
+rules:
+  - id: DJ-CONF-001
+    languages: [python]
+    severity: ERROR
+    message: >-
+      DEBUG = True in a settings file that is not for development. In production
+      it exposes stack traces, paths, SQL queries and part of the configuration to
+      any visitor.
+    metadata:
+      cwe: "CWE-489"
+      owasp: "A02:2025 Security Misconfiguration"
+      severity_hdl: high
+      confidence: medium
+      message_es: >-
+        DEBUG = True en un archivo de configuración que no es de desarrollo. En
+        producción expone trazas, rutas, consultas SQL y parte de la
+        configuración a cualquier visitante.
+      title: "DEBUG turned on in settings"
+      recommendation: >-
+        Set DEBUG = False by default and turn it on only from an environment
+        variable on development machines.
+      title_es: "DEBUG activado en configuración"
+      recommendation_es: >-
+        Definir DEBUG = False por defecto y activarlo solo desde una variable
+        de entorno en los equipos de desarrollo.
+    paths:
+      include:
+        - "settings.py"
+        - "settings_*.py"
+        - "**/settings/*.py"
+      exclude:
+        - "*dev*.py"
+        - "*local*.py"
+        - "*test*.py"
+    pattern: DEBUG = True

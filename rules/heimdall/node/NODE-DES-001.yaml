@@ -1,0 +1,70 @@
+rules:
+  - id: NODE-DES-001
+    languages: [javascript, typescript]
+    severity: ERROR
+    message: >-
+      Insecure deserialization: node-serialize.unserialize runs functions
+      embedded in the text, js-yaml with the full schema builds arbitrary
+      objects and functions, and evaluating JSON with eval runs any code it
+      contains.
+    metadata:
+      cwe: "CWE-502"
+      owasp: "A08:2025 Software or Data Integrity Failures"
+      severity_hdl: high
+      confidence: medium
+      title_es: "Deserialización insegura (Node.js)"
+      title: "Insecure deserialization (Node.js)"
+      recommendation_es: >-
+        No usar node-serialize: intercambiar datos como JSON con JSON.parse. En
+        js-yaml usar yaml.load con el esquema por defecto de la versión 4 o
+        DEFAULT_SCHEMA/JSON_SCHEMA, nunca DEFAULT_FULL_SCHEMA. No evaluar JSON
+        con eval.
+      recommendation: >-
+        Do not use node-serialize: exchange data as JSON with JSON.parse. With
+        js-yaml, use yaml.load with the default schema of version 4 or
+        DEFAULT_SCHEMA/JSON_SCHEMA, never DEFAULT_FULL_SCHEMA. Do not evaluate
+        JSON with eval.
+      message_es: >-
+        Deserialización insegura: node-serialize.unserialize ejecuta funciones
+        incluidas en el texto, js-yaml con el esquema completo construye objetos
+        y funciones arbitrarias, y evaluar JSON con eval ejecuta cualquier
+        código incluido en él.
+    patterns:
+      - pattern-either:
+          - patterns:
+              - pattern: $S.unserialize(...)
+              - metavariable-regex:
+                  metavariable: $S
+                  regex: (?i)^.*serialize.*$
+          # A bare unserialize() is only a risk when the file loads a serialization
+          # package; a php.js-style helper in browser code is not that.
+          - patterns:
+              - pattern: unserialize($X)
+              - pattern-not-inside: |
+                  class $C { ... }
+              - pattern-either:
+                  - pattern-inside: |
+                      $A = require($P);
+                      ...
+                  - pattern-inside: |
+                      require($P);
+                      ...
+                  - pattern-inside: |
+                      import $A from $P;
+                      ...
+                  - pattern-inside: |
+                      import {...} from $P;
+                      ...
+                  - pattern-inside: |
+                      import * as $A from $P;
+                      ...
+              - metavariable-regex:
+                  metavariable: $P
+                  regex: (?i)^['"`](node-serialize|serialize-to-js|funcster|cryo|serialize-javascript|js-serialize|serialize)['"`]$
+          - pattern: |
+              $Y.$M(..., {..., schema: $Z.DEFAULT_FULL_SCHEMA, ...})
+          - pattern: |
+              $Y.$M(..., {..., schema: DEFAULT_FULL_SCHEMA, ...})
+          - pattern: eval("(" + $X + ")")
+          - pattern: eval("(" + $X)
+          - pattern: eval('(' + JSON.stringify(...) + ')')

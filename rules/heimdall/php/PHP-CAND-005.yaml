@@ -1,0 +1,30 @@
+rules:
+  - id: PHP-CAND-005
+    languages: [php]
+    severity: INFO
+    message: >-
+      The user is redirected to a destination that is not a constant. It is only a point to review: the local AI checks whether untrusted input reaches it.
+    metadata:
+      candidate_kind: redirect
+      cwe: "CWE-601"
+      owasp: "A01:2025 Broken Access Control"
+      severity_hdl: medium
+      confidence: low
+      message_es: >-
+        Se redirige al usuario a un destino que no es constante. Es solo un punto por revisar: la IA local comprueba si le llega entrada no confiable.
+      title: "Redirect to a variable (to review)"
+      recommendation: >-
+        Redirect only to relative paths or to hosts on an allow list.
+      title_es: "Redirección a una variable (por revisar)"
+      recommendation_es: >-
+        Redirige solo a rutas relativas o a hosts de una lista permitida.
+    patterns:
+      - pattern-either:
+          - pattern: 'header("Location: " . $X)'
+          - pattern: 'header("Location: $X")'
+          - pattern: redirect($X, ...)
+          - pattern: redirect()->to($X, ...)
+          - pattern: Redirect::to($X, ...)
+      - pattern-not: redirect("...", ...)
+      - pattern-not: redirect()->to("...", ...)
+      - pattern-not: Redirect::to("...", ...)

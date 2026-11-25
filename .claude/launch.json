@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "heimdall-ui",
+      "runtimeExecutable": "uv",
+      "runtimeArgs": ["run", "python", "-m", "heimdall_guardian.ui", "--web", "--port", "8551"],
+      "port": 8551
+    }
+  ]
+}

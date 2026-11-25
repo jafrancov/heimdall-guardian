@@ -1,0 +1,40 @@
+rules:
+  - id: DART-WEB-002
+    languages: [dart]
+    severity: WARNING
+    message: >-
+      WebView with unrestricted JavaScript: any page it loads runs scripts
+      with access to the WebView's cookies and content. This is common and
+      necessary for many pages, but it should load only your own content
+      over https.
+    metadata:
+      cwe: "CWE-749"
+      owasp: "A06:2025 Insecure Design"
+      severity_hdl: medium
+      confidence: low
+      title_es: "WebView con JavaScript habilitado (Dart/Flutter)"
+      title: "WebView with JavaScript enabled (Dart/Flutter)"
+      recommendation_es: >-
+        Activar JavaScript solo si la página lo necesita, limitar la navegación
+        a dominios propios con NavigationDelegate o shouldOverrideUrlLoading, y
+        no cargar contenido por http. Para contenido estático, usar
+        JavaScriptMode.disabled.
+      recommendation: >-
+        Enable JavaScript only if the page needs it, restrict navigation to
+        your own domains with NavigationDelegate or shouldOverrideUrlLoading,
+        and do not load content over http. For static content, use
+        JavaScriptMode.disabled.
+      message_es: >-
+        WebView con JavaScript sin restricción: cualquier página que cargue
+        ejecuta scripts con acceso a las cookies y al contenido del WebView. Es
+        habitual y necesario para muchas páginas, pero conviene que cargue solo
+        contenido propio y por https.
+    pattern-either:
+      - pattern: JavaScriptMode.unrestricted
+      - pattern: JavascriptMode.unrestricted
+      - pattern: |
+          InAppWebViewSettings(..., javaScriptEnabled: true, ...)
+      - pattern: |
+          InAppWebViewOptions(..., javaScriptEnabled: true, ...)
+      - pattern: |
+          InAppWebViewGroupOptions(..., javaScriptEnabled: true, ...)

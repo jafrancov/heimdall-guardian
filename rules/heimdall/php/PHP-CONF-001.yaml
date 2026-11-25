@@ -1,0 +1,45 @@
+rules:
+  - id: PHP-CONF-001
+    languages: [regex]
+    severity: ERROR
+    message: >-
+      Insecure configuration: display_errors turned on (shows paths, queries and
+      stack traces to any visitor) or credentials written in a versioned .env
+      file.
+    metadata:
+      cwe: "CWE-209"
+      owasp: "A02:2025 Security Misconfiguration"
+      severity_hdl: high
+      confidence: medium
+      # The ".env" claim only holds when git versions the file; untracked ones are dropped.
+      versioned_only: [".env", ".env.*"]
+      message_es: >-
+        Configuración insegura: display_errors activado (muestra rutas,
+        consultas y trazas a cualquier visitante) o credenciales escritas en un
+        archivo .env versionado.
+      title: "display_errors on or credentials in a versioned .env"
+      recommendation: >-
+        In production, set display_errors = Off and log_errors = On. Do not version
+        the .env file: add it to .gitignore, keep a .env.example without values and
+        change the exposed credentials.
+      title_es: "display_errors activo o credenciales en .env versionado"
+      recommendation_es: >-
+        En producción, display_errors = Off y log_errors = On. El archivo
+        .env no se versiona: agregarlo a .gitignore, dejar un .env.example
+        sin valores y cambiar las credenciales expuestas.
+    paths:
+      include:
+        - "*.ini"
+        - ".htaccess"
+        - "*.php"
+        - ".env"
+        - ".env.*"
+      exclude:
+        - ".env.example"
+        - ".env.sample"
+        - ".env.dist"
+    pattern-either:
+      - pattern-regex: (?im)^[ \t]*display_errors[ \t]*=[ \t]*(on|1|true|stdout)\b
+      - pattern-regex: (?im)^[ \t]*php_(flag|value)[ \t]+display_errors[ \t]+(on|1|true)\b
+      - pattern-regex: (?i)ini_set\(\s*['"]display_errors['"]\s*,\s*['"]?(1|on|true|stdout)['"]?\s*\)
+      - pattern-regex: (?m)^[ \t]*(export[ \t]+)?[A-Z0-9_]*(PASSWORD|SECRET|API_KEY|TOKEN)[A-Z0-9_]*[ \t]*=[ \t]*[^\s#]+

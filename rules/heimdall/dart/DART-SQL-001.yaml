@@ -1,0 +1,43 @@
+rules:
+  - id: DART-SQL-001
+    languages: [regex]
+    severity: ERROR
+    message: >-
+      SQL injection: the query is built with interpolation ($variable or
+      ${expression}) or text concatenation instead of bound arguments. A
+      value such as `' OR 1=1 --` alters the query and can read or delete
+      the application's local database.
+    metadata:
+      cwe: "CWE-89"
+      owasp: "A05:2025 Injection"
+      severity_hdl: high
+      confidence: medium
+      title_es: "Consulta SQL construida con texto (sqflite/drift, Dart/Flutter)"
+      title: "SQL query built from text (sqflite/drift, Dart/Flutter)"
+      recommendation_es: >-
+        Usar marcadores ? con la lista de argumentos (rawQuery('... WHERE id =
+        ?', [id])), los parámetros where/whereArgs de query, update y delete, o
+        las consultas tipadas de drift. En drift, Variable<T> dentro de
+        customSelect. Nunca interpolar valores en el SQL.
+      recommendation: >-
+        Use ? placeholders with the argument list (rawQuery('... WHERE id =
+        ?', [id])), the where/whereArgs parameters of query, update and
+        delete, or drift's typed queries. In drift, use Variable<T> inside
+        customSelect. Never interpolate values into the SQL.
+      message_es: >-
+        Inyección SQL: la consulta se arma con interpolación ($variable o
+        ${expresión}) o concatenación de texto en lugar de argumentos
+        enlazados. Un valor como `' OR 1=1 --` altera la consulta y puede leer o
+        borrar la base local de la aplicación.
+    paths:
+      include:
+        - "*.dart"
+    pattern-either:
+      - pattern-regex: >-
+          (?m)^(?![ \t]*//)[^\n]*?\b(?:rawQuery|rawInsert|rawUpdate|rawDelete|execute|customSelect|customStatement|customUpdate|customInsert)\(\s*r?("""|\x27\x27\x27|"|\x27)(?:(?!\1)[^\\]|\\.)*?(?<!\\)\$[A-Za-z_{]
+      - pattern-regex: >-
+          (?m)^(?![ \t]*//)[^\n]*?\b(?:rawQuery|rawInsert|rawUpdate|rawDelete|execute|customSelect|customStatement|customUpdate|customInsert)\(\s*(?:r?(?:"(?:[^"\\\n]|\\.)*"|\x27(?:[^\x27\\\n]|\\.)*\x27)\s*\+\s*[A-Za-z_(]|[A-Za-z_][\w.]*\s*\+\s*r?["\x27])
+      - pattern-regex: >-
+          (?m)^(?![ \t]*//)[^\n]*?\bwhere:\s*r?("|\x27)(?:(?!\1)[^\\\n]|\\.)*?(?<!\\)\$[A-Za-z_{]
+      - pattern-regex: >-
+          (?m)^(?![ \t]*//)[^\n]*?\bwhere:\s*(?:r?(?:"(?:[^"\\\n]|\\.)*"|\x27(?:[^\x27\\\n]|\\.)*\x27)\s*\+\s*[A-Za-z_(]|[A-Za-z_][\w.]*\s*\+\s*r?["\x27])
